@@ -11,6 +11,7 @@ endif()
 
 project ("ufo_torrent")
 
+enable_testing()
 # Включите подпроекты.
 include_directories(includes)
 add_subdirectory ("ufo_torrent")
