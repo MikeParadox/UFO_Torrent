@@ -410,4 +410,4 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
-out/build/x64-debug/.cmake/api/v1/
+out/build/
