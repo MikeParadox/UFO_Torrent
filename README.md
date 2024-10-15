@@ -34,3 +34,11 @@ Development), которая полностью отвечает требова�
 ## Опциональные задачи
 
 - реализация gui
+
+## Референсы
+
+Create BitTorrent fron scratch - https://www.seanjoflynn.com/research/bittorrent.html
+
+libtorrent - https://www.libtorrent.org/
+
+Simple BitTorrent in C++ - https://github.com/ss16118/torrent-client-cpp
