@@ -37,7 +37,7 @@ Development), которая полностью отвечает требова�
 
 ## Референсы
 
-Create BitTorrent fron scratch - https://www.seanjoflynn.com/research/bittorrent.html
+Create BitTorrent from scratch - https://www.seanjoflynn.com/research/bittorrent.html
 
 libtorrent - https://www.libtorrent.org/
 
