@@ -1,0 +1,10 @@
+[requires]
+gtest/1.15.0
+ncurses/6.5
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
