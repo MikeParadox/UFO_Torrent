@@ -75,7 +75,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "Testing::@145eef247bfb46b6828c",
-					"jsonFile" : "target-Testing-5827cec1a60ad19595cd.json",
+					"jsonFile" : "target-Testing-4e7e92202d871190ae10.json",
 					"name" : "Testing",
 					"projectIndex" : 0
 				},
@@ -89,7 +89,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "ufo_torrent::@145eef247bfb46b6828c",
-					"jsonFile" : "target-ufo_torrent-b28976e94c7beebd5b36.json",
+					"jsonFile" : "target-ufo_torrent-6888ed3c8a983aea5bde.json",
 					"name" : "ufo_torrent",
 					"projectIndex" : 0
 				}

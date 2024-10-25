@@ -29,13 +29,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 9,
+				"line" : 16,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 11,
+				"line" : 29,
 				"parent" : 0
 			},
 			{
@@ -56,7 +56,7 @@
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 14,
+				"line" : 35,
 				"parent" : 0
 			}
 		]
@@ -143,6 +143,15 @@
 			{
 				"backtrace" : 2,
 				"fragment" : "libTesting.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lcurses",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libform.so",
 				"role" : "libraries"
 			}
 		],

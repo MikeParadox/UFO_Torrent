@@ -1,6 +1,7 @@
 [requires]
 gtest/1.15.0
 ncurses/6.5
+boost/1.86.0
 
 [generators]
 CMakeDeps
