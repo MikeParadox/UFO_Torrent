@@ -411,3 +411,4 @@ _deps
 CMakeUserPresets.json
 
 out/build/
+out/Ubuntu/
