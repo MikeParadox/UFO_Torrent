@@ -10,13 +10,15 @@ include_directories(${CURSES_INDLUDE_DIRS})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS}) 
 
+add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp 
+                      ./bencode/decode.h ./bencode/decode.cpp
+                      ./bencode/prettyPrinter.h ./bencode/prettyPrinter.cpp)
 
-add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
 set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.45.0 COMPONENTS *boost libraries here*) 
 
@@ -26,7 +28,8 @@ find_package(Boost 1.45.0 COMPONENTS *boost libraries here*)
 # endif()
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Testing 
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+  Testing
   ${CURSES_LIBRARIES}
   ${Boost_LIBRARIES}
 )

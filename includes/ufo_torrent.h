@@ -12,5 +12,4 @@ int testSum(int, int);
 // программы.
 
 
-
 #endif
