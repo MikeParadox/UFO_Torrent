@@ -14,7 +14,7 @@ string Decoder::firstDigit(const string& str) {
             number += str[i];            
         }
         else if (!number.empty()) { 
-            return number;            
+            break;            
         }
     }
     return number;
