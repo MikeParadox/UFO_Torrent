@@ -15,17 +15,32 @@ using namespace bencode;
 
 int main()
 {
-    using LongFloat = boost::multiprecision::cpp_bin_float_quad;
+	int ch;
 
-    const auto x = boost::multiprecision::int128_t(1234123521);
-    const auto y = LongFloat(34532.52346246234);
-    const auto z = LongFloat(x) / y;
-    std::cout << "Ratio: " << std::setprecision(10) << z << "\n";
- 
-    std::string s = "i10e";
+	initscr();			/* Start curses mode 		*/
+	raw();				/* Line buffering disabled	*/
+	keypad(stdscr, TRUE);		/* We get F1, F2 etc..		*/
+	noecho();			/* Don't echo() while we do getch */
 
-    Decoder::decode(s);
+	printw("Type any character to see it in bold\n");
+	ch = getch();			/* If raw() hadn't been called
+					 * we have to press enter before it
+					 * gets to the program 		*/
+	if (ch == KEY_F(1))		/* Without keypad enabled this will */
+		printw("F1 Key pressed");/*  not get to us either	*/
+	/* Without noecho() some ugly escape
+	 * charachters might have been printed
+	 * on screen			*/
+	else
+	{
+		printw("The pressed key is ");
+		attron(A_BOLD);
+		printw("%c", ch);
+		attroff(A_BOLD);
+	}
+	refresh();			/* Print it on to the real screen */
+	getch();			/* Wait for user input */
+	endwin();			/* End curses mode		  */
 
-    Value torrent = boost::get<ValueDictionary>(Decoder::decode("d8:announce42:udp://tracker.opentrackr.org:1337/announce13:announce-listll42:udp://tracker.opentrackr.org:1337/announceel35:udp://open.tracker.cl:1337/announceel33:udp://open.stealth.si:80/announceel41:udp://tracker.torrent.eu.org:451/announceel32:udp://explodie.org:6969/announceee10:created by31:â˜…â˜…â˜… megaseed.kz â˜…â˜…â˜…13:creation datei1729683364e4:infod5:filesld6:lengthi1470559189e4:pathl8:data.bineed6:lengthi2485956e4:pathl9:data0.bineed6:lengthi63294816e4:pathl9:Setup.exeeee4:name18:Factorio by Igruha12:piece lengthi2097152e6:pieces14660:©€+ş‰øì÷¹Üˆ¢a‡R öãÀQé¨†9˜•~ESñæí© ¹•³÷¤oç¾]ájÑ÷tB%ÊÉÇµ…~éó ^÷Èí¶­œ`rµ­›v~ş"));
-    boost::apply_visitor(PrettyPrinter(), torrent);
+	return 0;
 }
