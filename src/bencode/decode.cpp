@@ -20,6 +20,7 @@ string Decoder::firstDigit(const string& str) {
     return number;
 }
 
+
 pair<int, int> Decoder::decodeInt(const string& s) {
 
     size_t eIndex = s.find_first_of('e');
