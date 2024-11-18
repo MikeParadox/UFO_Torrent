@@ -10,16 +10,12 @@ class EncodeVisitor : public boost::static_visitor<std::string>
 public:
     string operator()(int value) const
     {
-        std::stringstream stream;
-        stream << "i" << value << "e";
-        return stream.str();
+        // TODO
     }
 
     string operator()(const string& value) const
     {
-        std::stringstream stream;
-        stream << value.size() << ":" << value;
-        return stream.str();
+        // TODO
     }
 
     string operator()(const ValueDictionary& dict) const
