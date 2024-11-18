@@ -14,7 +14,7 @@ namespace bencode {
 		static std::string firstDigit(const std::string& str);
 
 		// Декодирования первого инта в строке
-		static std::pair<int, int> decodeInt(const std::string& s);
+		static std::pair<long long, int> decodeInt(const std::string& s);
 
 		// Декодирование первого стринга в строке
 		static std::pair<std::string, int> decodeString(const std::string& s);
