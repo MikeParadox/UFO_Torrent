@@ -1,5 +1,5 @@
 #pragma once
-#include "./valueTypes.h"
+#include "valueTypes.h"
 
 namespace bencode {
 

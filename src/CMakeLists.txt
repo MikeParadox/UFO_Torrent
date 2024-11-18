@@ -11,9 +11,9 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS}) 
 
 add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp 
-                      ./bencode/decode.h ./bencode/decode.cpp
-                      ./bencode/prettyPrinter.h ./bencode/prettyPrinter.cpp)
-
+                      ./bencode/decode.cpp
+                      ./bencode/prettyPrinter.cpp
+                      ./bencode/encode.cpp)
 
 add_executable(${PROJECT_NAME} main.cpp)
 

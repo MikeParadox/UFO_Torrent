@@ -5,6 +5,9 @@
 #define UFO_TORRENT_H
 
 #include <iostream>
+#include "prettyPrinter.h"
+#include "decode.h"
+#include "encode.h"
 
 // для тестов
 int testSum(int, int);

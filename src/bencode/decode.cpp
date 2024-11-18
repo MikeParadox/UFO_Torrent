@@ -1,4 +1,4 @@
-#include "./decode.h"
+#include "../includes/decode.h"
 #include <boost/variant.hpp>
 #include <tuple>
 
@@ -8,11 +8,16 @@ using std::pair;
 using std::string;
 
 string Decoder::firstDigit(const string& str) {
-    string res = "";
-
-    // TODO : issue #12
-
-    return res;
+    std::string number;
+    for (int i = 0; i < str.size(); ++i) {
+        if (isdigit(str[i])) {
+            number += str[i];
+        }
+        else if (!number.empty()) {
+            break;
+        }
+    }
+    return number;
 }
 
 pair<int, int> Decoder::decodeInt(const string& s) {
