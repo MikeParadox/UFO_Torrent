@@ -1,7 +1,4 @@
-﻿// ufo_torrent.h : включаемый файл для стандартных системных включаемых файлов
-// или включаемые файлы для конкретного проекта.
-
-#ifndef UFO_TORRENT_H
+﻿#ifndef UFO_TORRENT_H
 #define UFO_TORRENT_H
 
 #include <iostream>
