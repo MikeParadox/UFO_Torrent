@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ENCODE_H
+#define ENCODE_H
+
 #include "valueTypes.h"
 
 #include <string>
@@ -15,3 +17,5 @@ namespace bencode {
 
     };
 };
+
+#endif

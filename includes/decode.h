@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DECODE_H
+#define DECODE_H
+
 #include "valueTypes.h"
 
 namespace bencode {
@@ -29,3 +31,5 @@ namespace bencode {
 		static std::pair<Value, int> _decode(const std::string& s);
 	};
 }
+
+#endif
