@@ -9,6 +9,8 @@ using std::string;
 using std::pair;
 using std::string;
 
+
+
 bool stringToLongLong(const std::string& str, long long& result) {
     try {
         result = boost::lexical_cast<long long>(str);
@@ -163,3 +165,6 @@ pair<Value, int> Decoder::_decode(const string& s) {
 Value Decoder::decode(const string& string) {
     return _decode(string).first; // ���������� ������ ��������, ��������� �����
 }
+
+
+std::pair<std::string, int> Str::decodeStr(const std::string& s) { return Decoder::decodeString(s); }
