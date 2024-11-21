@@ -4,6 +4,7 @@
 #include <sstream>
 
 using namespace bencode;
+using std::string
 
 class EncodeVisitor : public boost::static_visitor<std::string>
 {
