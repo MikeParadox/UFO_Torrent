@@ -10,7 +10,7 @@ class EncodeVisitor : public boost::static_visitor<std::string>
 public:
     string operator()(int value) const
     {
-        // TODO
+        return "i" + std::to_string(value) + "e";
     }
 
     string operator()(const string& value) const
