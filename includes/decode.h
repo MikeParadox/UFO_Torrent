@@ -5,14 +5,15 @@
 
 
 
-namespace bencode {
+namespace bencode 
+{
 
 	class Decoder
 	{
-		
+
 	public:
-		
-		friend struct Str;
+
+		friend struct Dt;
 		// Декодирование строки
 		static Value decode(const std::string& string);
 
@@ -35,10 +36,13 @@ namespace bencode {
 		// Декодирования всей строки рекурсией
 		static std::pair<Value, int> _decode(const std::string& s);
 	};
-	struct Str {
-		std::pair<std::string, int> decodeStr(const std::string& s);
+	struct Dt
+	{
+		std::pair<ValueDictionary, int> decodeDc(const std::string& s);
 		Decoder decoder;
 	};
+
+
 }
 
 #endif
