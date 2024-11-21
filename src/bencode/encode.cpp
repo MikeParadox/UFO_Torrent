@@ -16,7 +16,8 @@ public:
 
     string operator()(const string& value) const
     {
-        // TODO
+        if (value.empty()) throw std::invalid_argument("The line is empty");
+        return to_string(value.length()) + ":" + value;
     }
 
     string operator()(const ValueDictionary& dict) const
