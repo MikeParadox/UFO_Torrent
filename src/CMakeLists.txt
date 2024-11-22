@@ -12,7 +12,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp 
                       ./bencode/decode.h ./bencode/decode.cpp
-                      ./bencode/prettyPrinter.h ./bencode/prettyPrinter.cpp)
+                      ./bencode/prettyPrinter.h ./bencode/prettyPrinter.cpp "ncurses_utils.cpp")
 
 
 add_executable(${PROJECT_NAME} main.cpp)
