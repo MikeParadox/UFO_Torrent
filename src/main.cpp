@@ -74,29 +74,51 @@ int main()
                 box(input_win, 0, 0);
                 wrefresh(input_win);
 
-                std::string path = inputFilePath(input_win);  // Вызываем функцию ввода пути
+    // Опции меню
+    std::vector<std::string> menu_items = { "Scan file", "exit" };
+    size_t highlight = 0;
+    size_t choice = 0;
 
-	x = 2;
-	y = 2;
-	box(menu_win, 0, 0);
-	for (i = 0; i < n_choices; ++i)
-	{
-		if (highlight == i + 1) /* High light the present choice */
-		{
-			wattron(menu_win, A_REVERSE);
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-			wattroff(menu_win, A_REVERSE);
-		}
-		else
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-		++y;
-	}
-	wrefresh(menu_win);
-	refresh();			/* Print it on to the real screen */
-	getch();			/* Wait for user input */
-	endwin();			/* End curses mode		  */
-    TorrentFile file = parseTorrentFile(Decoder::decode(readFile("exemple.torrent")));
-    Value valueFile = toValue(file);
+    // Создаем окно для меню
+    int menu_height = menu_items.size() + 2;
+    int menu_width = 40, menu_start_y = 4, menu_start_x = 10;
+    WINDOW* menu_win = newwin(menu_height, menu_width, menu_start_y, menu_start_x);
+    keypad(menu_win, true);
+
+    // Основной цикл программы
+    while (true) 
+    {
+        // Отображаем меню
+        display_menu(menu_win, menu_items, highlight);
+
+        int ch = wgetch(menu_win);
+        switch (ch) 
+        {
+        case KEY_UP:
+            if (highlight > 0) --highlight;
+            break;
+        case KEY_DOWN:
+            if (highlight < menu_items.size()) ++highlight;
+            break;
+        case '\n':  // Enter
+            choice = highlight + 1;
+            break;
+        default:
+            break;
+        }
+        // Обработка выбора
+        if (choice != 0) 
+        {
+            if (choice == 1) 
+            {  // Первый пункт: ввод пути к файлу
+                // Создаем окно для ввода пути
+                int input_height = 8, input_width = 50;
+                int input_start_y = menu_start_y + menu_height + 2, input_start_x = 10;
+                WINDOW* input_win = newwin(input_height, input_width, input_start_y, input_start_x);
+                box(input_win, 0, 0);
+                wrefresh(input_win);
+
+                std::string path = inputFilePath(input_win);  // Вызываем функцию ввода пути
 
     boost::apply_visitor(PrettyPrinter(), valueFile);
 	return 0;
