@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <ncurses.h>
-#include <string>
 #include <fstream>
 
 #include "../includes/prettyPrinter.h"
@@ -10,9 +9,6 @@
 #include "../includes/torrentFile.h"
 #include "../includes/encode.h"
 #include <filesystem>
-#include <string.h>
-#include "./bencode/decode.h"
-#include "bencode/prettyPrinter.h"
 #include "ncurses_utils.h"
 
 using namespace bencode;
@@ -68,16 +64,42 @@ int main()
                 box(input_win, 0, 0);
                 wrefresh(input_win);
 
-                std::string path = inputFilePath(input_win);  
+                try 
+                {
+                    //TorrentFile file = parseTorrentFile(Decoder::decode(readFile(inputFilePath(input_win))));
+                    TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../123.torrent")));
+                    box(input_win, 0, 0);
+                    int curr_y = 1;
+                    mvwprintw(input_win, curr_y++, 1, "Your file content: ");
+                    wrefresh(input_win);
+                    mvwprintw(input_win, curr_y++, 1, "Announce: %s", file.announce.c_str());
+                    wrefresh(input_win);
+                    //if (file.createdBy.has_value()) mvwprintw(input_win, curr_y++, 1, "CreatedBy: %s", file.createdBy.value().c_str());
+                    //wrefresh(input_win);
+                    //if (file.creationDate.has_value()) mvwprintw(input_win, curr_y++, 1, "CreationDate: %s", std::to_string(file.creationDate.value()).c_str());
+                    //mvwprintw(input_win, curr_y++, 1, "Internal structure: ");
+                    //for (size_t i = 0; i < file.info.files.size(); i++)
+                    //{
+                    //    mvwprintw(input_win, curr_y++, 1, "%s", file.info.name.c_str());
+                    //    for (size_t j = 0; j < file.info.files[i].path.size(); j++)
+                    //    {
+                    //        mvwprintw(input_win, curr_y++, 1, "  %s", file.info.files[i].path[j].c_str());
+                    //    }
+                    //}
 
-                werase(input_win);
-                box(input_win, 0, 0);
-                mvwprintw(input_win, 1, 1, "Your path:");
-                mvwprintw(input_win, 2, 1, "%s", path.c_str());
-                mvwprintw(input_win, 3, 1, "Press any button");
+                    //mvwprintw(input_win, curr_y++, 1, "Press any button");
+                }
+                catch (std::runtime_error& e)
+                {
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    mvwprintw(input_win, 1, 1, "No such file!");
+                    mvwprintw(input_win, 2, 1, "Press any button");
+                }
                 wrefresh(input_win);
                 wgetch(input_win);
                 delwin(input_win);  
+                refresh();
             }
             else if (choice == 2)
             {  
