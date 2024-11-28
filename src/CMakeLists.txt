@@ -15,7 +15,7 @@ add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp
                       ./bencode/prettyPrinter.cpp
                       ./bencode/encode.cpp)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(main main.cpp)
 
 set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON)
@@ -28,15 +28,11 @@ find_package(Boost 1.45.0 COMPONENTS *boost libraries here*)
 # endif()
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(main PRIVATE 
   Testing
   ${CURSES_LIBRARIES}
   ${Boost_LIBRARIES}
 )
-
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET ufo_torrent PROPERTY CXX_STANDARD 20)
-endif()
 
 # TODO: Добавьте тесты и целевые объекты, если это необходимо.
 

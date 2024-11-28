@@ -32,7 +32,7 @@
 					"targetIndexes" : 
 					[
 						0,
-						2
+						1
 					]
 				},
 				{
@@ -47,7 +47,7 @@
 					"source" : "tests",
 					"targetIndexes" : 
 					[
-						1
+						2
 					]
 				}
 			],
@@ -75,22 +75,22 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "Testing::@145eef247bfb46b6828c",
-					"jsonFile" : "target-Testing-4e7e92202d871190ae10.json",
+					"jsonFile" : "target-Testing-36628a3898d807c5ed37.json",
 					"name" : "Testing",
 					"projectIndex" : 0
 				},
 				{
-					"directoryIndex" : 2,
-					"id" : "ufo_tests::@a44f0ac069e85531cdee",
-					"jsonFile" : "target-ufo_tests-4d63cf702213cb46000b.json",
-					"name" : "ufo_tests",
+					"directoryIndex" : 1,
+					"id" : "main::@145eef247bfb46b6828c",
+					"jsonFile" : "target-main-b5b097fadb6b59c4e5ac.json",
+					"name" : "main",
 					"projectIndex" : 0
 				},
 				{
-					"directoryIndex" : 1,
-					"id" : "ufo_torrent::@145eef247bfb46b6828c",
-					"jsonFile" : "target-ufo_torrent-6888ed3c8a983aea5bde.json",
-					"name" : "ufo_torrent",
+					"directoryIndex" : 2,
+					"id" : "main_tests::@a44f0ac069e85531cdee",
+					"jsonFile" : "target-main_tests-ee70cc4ab3885ac5621c.json",
+					"name" : "main_tests",
 					"projectIndex" : 0
 				}
 			]

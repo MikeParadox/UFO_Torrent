@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "ufo_tests"
+			"path" : "main_tests"
 		}
 	],
 	"backtrace" : 1,
@@ -84,7 +84,7 @@
 			{
 				"command" : 5,
 				"file" : 4,
-				"line" : 25,
+				"line" : 24,
 				"parent" : 10
 			}
 		]
@@ -94,6 +94,9 @@
 		{
 			"compileCommandFragments" : 
 			[
+				{
+					"fragment" : "-std=gnu++23"
+				},
 				{
 					"backtrace" : 2,
 					"fragment" : "-DGTEST_HAS_PTHREAD=1"
@@ -107,6 +110,14 @@
 				}
 			],
 			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					2
+				],
+				"standard" : "23"
+			},
 			"sourceIndexes" : 
 			[
 				0
@@ -120,7 +131,7 @@
 			"id" : "Testing::@145eef247bfb46b6828c"
 		}
 	],
-	"id" : "ufo_tests::@a44f0ac069e85531cdee",
+	"id" : "main_tests::@a44f0ac069e85531cdee",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -131,7 +142,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "../src/libTesting.a",
+				"fragment" : "src/libTesting.a",
 				"role" : "libraries"
 			},
 			{
@@ -147,8 +158,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "ufo_tests",
-	"nameOnDisk" : "ufo_tests",
+	"name" : "main_tests",
+	"nameOnDisk" : "main_tests",
 	"paths" : 
 	{
 		"build" : "tests",

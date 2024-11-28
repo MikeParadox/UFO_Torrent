@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "ufo_torrent"
+			"path" : "main"
 		}
 	],
 	"backtrace" : 1,
@@ -13,8 +13,7 @@
 			"add_executable",
 			"target_link_libraries",
 			"target_compile_options",
-			"include_directories",
-			"set_property"
+			"include_directories"
 		],
 		"files" : 
 		[
@@ -29,13 +28,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 16,
+				"line" : 18,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 29,
+				"line" : 31,
 				"parent" : 0
 			},
 			{
@@ -44,20 +43,14 @@
 			{
 				"command" : 2,
 				"file" : 1,
-				"line" : 29,
+				"line" : 28,
 				"parent" : 3
 			},
 			{
 				"command" : 3,
 				"file" : 1,
-				"line" : 25,
+				"line" : 24,
 				"parent" : 3
-			},
-			{
-				"command" : 4,
-				"file" : 0,
-				"line" : 35,
-				"parent" : 0
 			}
 		]
 	},
@@ -67,7 +60,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-std=gnu++20"
+					"fragment" : "-std=gnu++23"
 				},
 				{
 					"backtrace" : 4,
@@ -114,9 +107,9 @@
 			{
 				"backtraces" : 
 				[
-					6
+					1
 				],
-				"standard" : "20"
+				"standard" : "23"
 			},
 			"sourceIndexes" : 
 			[
@@ -131,7 +124,7 @@
 			"id" : "Testing::@145eef247bfb46b6828c"
 		}
 	],
-	"id" : "ufo_torrent::@145eef247bfb46b6828c",
+	"id" : "main::@145eef247bfb46b6828c",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -142,7 +135,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "libTesting.a",
+				"fragment" : "src/libTesting.a",
 				"role" : "libraries"
 			},
 			{
@@ -157,8 +150,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "ufo_torrent",
-	"nameOnDisk" : "ufo_torrent",
+	"name" : "main",
+	"nameOnDisk" : "main",
 	"paths" : 
 	{
 		"build" : "src",
