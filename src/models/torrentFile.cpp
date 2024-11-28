@@ -1,11 +1,12 @@
 #include "../includes/torrentFile.h"
 #include "torrentFile.h"
-#include <fstream>
 #include <filesystem>
 
 using std::string;
 using std::vector;
 using std::optional;
+
+namespace fs = std::filesystem;
 
 using namespace bencode;
 using namespace Torrent;
@@ -103,25 +104,32 @@ TorrentFile Torrent::parseTorrentFile(const Value& data) {
 	return torrent;
 }
 
-string readFile(const std::string& filePath) {
-	std::ifstream inputFile(filePath);
-	if (!inputFile.is_open())
-		throw std::runtime_error("Не удалось открыть файл: " + filePath);
-
-
-	std::string content((std::istreambuf_iterator<char>(inputFile)),
-		std::istreambuf_iterator<char>());
-
-	inputFile.close();
-
-	return content;
-}
-
 Value Torrent::toValue(const TorrentFile& torrent) {
 	ValueDictionary result;
 
-	result["announce"] = torrent.announce;
+	ValueDictionary infoDict;
+	infoDict["name"] = torrent.info.name;
 
+	if (!torrent.info.files.empty()) {
+		ValueVector filesVector;
+		for (const auto& file : torrent.info.files) {
+			ValueDictionary fileDict;
+			fileDict["length"] = static_cast<int>(file.length);
+
+			ValueVector pathVector;
+			for (const auto& pathPart : file.path) 
+				pathVector.push_back(pathPart);
+			
+			fileDict["path"] = pathVector;
+
+			filesVector.push_back(fileDict);
+		}
+		infoDict["files"] = filesVector;
+	}
+
+	infoDict["piece length"] = static_cast<int>(torrent.info.pieceLength);
+	infoDict["pieces"] = torrent.info.pieces;
+	result["info"] = infoDict;
 
 	ValueVector announceList;
 	for (const auto& tier : torrent.announceList) {
@@ -133,37 +141,76 @@ Value Torrent::toValue(const TorrentFile& torrent) {
 	}
 	result["announce-list"] = announceList;
 
-	if (torrent.createdBy) {
+	if (torrent.createdBy) 
 		result["created by"] = *torrent.createdBy;
-	}
 
-	if (torrent.creationDate) {
+
+	if (torrent.creationDate) 
 		result["creation date"] = static_cast<int>(*torrent.creationDate);
-	}
 
-	ValueDictionary infoDict;
-	infoDict["name"] = torrent.info.name;
-	infoDict["piece length"] = static_cast<int>(torrent.info.pieceLength);
-	infoDict["pieces"] = torrent.info.pieces;
 
-	if (!torrent.info.files.empty()) {
-		ValueVector filesVector;
-		for (const auto& file : torrent.info.files) {
-			ValueDictionary fileDict;
-			fileDict["length"] = static_cast<int>(file.length);
-
-			ValueVector pathVector;
-			for (const auto& pathPart : file.path) {
-				pathVector.push_back(pathPart);
-			}
-			fileDict["path"] = pathVector;
-
-			filesVector.push_back(fileDict);
-		}
-		infoDict["files"] = filesVector;
-	}
-
-	result["info"] = infoDict;
+	result["announce"] = torrent.announce;
 
 	return result;
+}
+
+TorrentFile Torrent::createTorrentFile(const string& announce, const vector<vector<string>>& announceList, const string& name, const string& folderPath, optional<string> createdBy, optional<time_t> creationDate)
+{
+	TorrentFile torrent;
+
+	torrent.announce = announce;
+	torrent.announceList = announceList;
+	torrent.createdBy = createdBy;
+	torrent.creationDate = creationDate;
+	torrent.info.name = name;
+
+	if (!fs::exists(folderPath))
+		throw std::runtime_error("Invalid path: " + folderPath);
+
+	unsigned long long filesSize = 0;
+
+	vector<string> fullPaths;
+	vector<TorrentFileInfo> infoFiles;
+
+	if (fs::is_regular_file(folderPath)) {
+		TorrentFileInfo cur;
+		fs::path filePath = folderPath;
+		cur.length = fs::file_size(filePath);
+
+		cur.path.push_back(filePath.filename().string());
+
+		infoFiles.push_back(cur);
+		fullPaths.push_back(filePath.string());
+		filesSize = cur.length;
+	}
+	else if (fs::is_directory(folderPath)) {
+		for (const auto& entry : fs::recursive_directory_iterator(folderPath)) {
+			if (entry.is_regular_file()) {
+				TorrentFileInfo cur;
+
+				fs::path filePath = entry.path();
+				cur.length = fs::file_size(filePath);
+
+				fs::path relativePath = fs::relative(filePath, folderPath);
+				for (const auto& part : relativePath) {
+					cur.path.push_back(part.string());
+				}
+
+				infoFiles.push_back(cur);
+				fullPaths.push_back(filePath.string());
+				filesSize += cur.length;
+			}
+		}
+
+		if (infoFiles.empty()) 
+			throw std::runtime_error("The folder is empty: " + folderPath);
+	}
+	else
+		throw std::runtime_error("The path is neither a file nor a directory: " + folderPath);
+
+	torrent.info.pieceLength = Hash::choosePieceLength(filesSize);
+	torrent.info.pieces = Hash::createHash(fullPaths, torrent.info.pieceLength);
+	torrent.info.files = infoFiles;
+
+	return torrent;
 }

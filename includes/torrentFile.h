@@ -6,6 +6,8 @@
 #include <optional>
 #include <stdexcept>
 #include "valueTypes.h"
+#include "createHash.h"
+#include "fileUtils.h"
 
 using std::string;
 using std::vector;
@@ -58,9 +60,10 @@ namespace Torrent {
 
     // Функция для преобразования value в TorrentFile
     TorrentFile parseTorrentFile(const Value& data);
-    Value toValue(const TorrentFile& torrent);
-};
 
-string readFile(const std::string& filePath);
+    Value toValue(const TorrentFile& torrent);
+
+    TorrentFile createTorrentFile(const string& announce,  const vector<vector<string>>& announceList, const string& name, const string& folderPath, optional<string> createdBy = std::nullopt, optional<time_t> creationDate = std::nullopt);
+};
 
 #endif
