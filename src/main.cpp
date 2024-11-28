@@ -13,8 +13,6 @@
 
 using namespace bencode;
 using namespace Torrent;
-#define WIDTH 30
-#define HEIGHT 10 
 #include <vector>
 #include <string>
 
@@ -30,7 +28,7 @@ int main()
     size_t choice = 0;
 
     int menu_height = menu_items.size() + 2;
-    int menu_width = 40, menu_start_y = 4, menu_start_x = 10;
+    int menu_width = 13, menu_start_y = 1, menu_start_x = 1;
     WINDOW* menu_win = newwin(menu_height, menu_width, menu_start_y, menu_start_x);
     keypad(menu_win, true);
 
@@ -46,7 +44,7 @@ int main()
             if (highlight > 0) --highlight;
             break;
         case KEY_DOWN:
-            if (highlight < menu_items.size()) ++highlight;
+            if (highlight < menu_items.size()-1) ++highlight;
             break;
         case '\n':  // Enter
             choice = highlight + 1;
@@ -59,35 +57,38 @@ int main()
             if (choice == 1)
             {  
                 int input_height = 8, input_width = 50;
-                int input_start_y = menu_start_y + menu_height + 2, input_start_x = 10;
+                int input_start_y = menu_start_y;
+                int input_start_x = menu_start_x+menu_width;
                 WINDOW* input_win = newwin(input_height, input_width, input_start_y, input_start_x);
                 box(input_win, 0, 0);
                 wrefresh(input_win);
-
                 try 
                 {
-                    //TorrentFile file = parseTorrentFile(Decoder::decode(readFile(inputFilePath(input_win))));
-                    TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../123.torrent")));
-                    box(input_win, 0, 0);
-                    int curr_y = 1;
-                    mvwprintw(input_win, curr_y++, 1, "Your file content: ");
-                    wrefresh(input_win);
-                    mvwprintw(input_win, curr_y++, 1, "Announce: %s", file.announce.c_str());
-                    wrefresh(input_win);
-                    //if (file.createdBy.has_value()) mvwprintw(input_win, curr_y++, 1, "CreatedBy: %s", file.createdBy.value().c_str());
-                    //wrefresh(input_win);
-                    //if (file.creationDate.has_value()) mvwprintw(input_win, curr_y++, 1, "CreationDate: %s", std::to_string(file.creationDate.value()).c_str());
-                    //mvwprintw(input_win, curr_y++, 1, "Internal structure: ");
-                    //for (size_t i = 0; i < file.info.files.size(); i++)
-                    //{
-                    //    mvwprintw(input_win, curr_y++, 1, "%s", file.info.name.c_str());
-                    //    for (size_t j = 0; j < file.info.files[i].path.size(); j++)
-                    //    {
-                    //        mvwprintw(input_win, curr_y++, 1, "  %s", file.info.files[i].path[j].c_str());
-                    //    }
-                    //}
+                    TorrentFile file = parseTorrentFile(Decoder::decode(readFile(inputFilePath(input_win))));
+                    //TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../exemple.torrent")));
+                    int y_output = countLinesForOutput(file);
+                    WINDOW* output_win = newwin(y_output, 50, input_start_y, input_start_x);
+                    werase(input_win);
 
-                    //mvwprintw(input_win, curr_y++, 1, "Press any button");
+                    box(output_win, 0, 0);
+                    int curr_y = 1;
+                    mvwprintw(output_win, curr_y++, 1, "Your file content: ");
+                    mvwprintw(output_win, curr_y++, 1, "Announce: %s", file.announce.c_str());
+                    if (file.createdBy.has_value()) mvwprintw(output_win, curr_y++, 1, "CreatedBy: %s", file.createdBy.value().c_str());
+                    if (file.creationDate.has_value()) mvwprintw(output_win, curr_y++, 1, "CreationDate: %s", std::to_string(file.creationDate.value()).c_str());
+                    mvwprintw(output_win, curr_y++, 1, "Internal structure: ");
+                    mvwprintw(output_win, curr_y++, 1, "%s", file.info.name.c_str());
+                    for (size_t i = 0; i < file.info.files.size(); i++)
+                    {
+                        for (size_t j = 0; j < file.info.files[i].path.size(); j++)
+                        {
+                            mvwprintw(output_win, curr_y++, 1, "  %s", file.info.files[i].path[j].c_str());
+                        }
+                    }
+                    mvwprintw(output_win, curr_y++, 1, "Press any button");
+                    wrefresh(output_win);
+                    wgetch(output_win);
+                    wclear(output_win);
                 }
                 catch (std::runtime_error& e)
                 {
@@ -95,10 +96,11 @@ int main()
                     box(input_win, 0, 0);
                     mvwprintw(input_win, 1, 1, "No such file!");
                     mvwprintw(input_win, 2, 1, "Press any button");
+                    wrefresh(input_win);
+                    wgetch(input_win);
+                    delwin(input_win);
                 }
-                wrefresh(input_win);
-                wgetch(input_win);
-                delwin(input_win);  
+                clear();
                 refresh();
             }
             else if (choice == 2)

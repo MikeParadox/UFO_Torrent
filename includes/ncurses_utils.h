@@ -3,9 +3,12 @@
 #include <ncurses.h>
 #include <vector>
 #include <string>
+#include "torrentFile.h"
 
 void display_menu(WINDOW* menu_win, const std::vector<std::string>& menu_items, size_t highlight);
 
 std::string inputFilePath(WINDOW* input_win);
+
+int countLinesForOutput(Torrent::TorrentFile file);
 
 #endif
