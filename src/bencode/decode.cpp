@@ -3,12 +3,12 @@
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <future>
 #include <tuple>
 
 using namespace bencode;
 using std::string;
 using std::pair;
-using std::string;
 
 
 bool stringToLongLong(const std::string& str, unsigned long long& result) {
@@ -42,21 +42,21 @@ pair<unsigned long long, int> Decoder::decodeInt(const string& s) {
         throw std::invalid_argument("Wrong int in file");
 }
 
-pair<string, int> Decoder::decodeString(const string& s) {
+pair<string, int> Decoder::decodestring(const string& s) {
     if (!isdigit(s[0])) 
         throw std::invalid_argument("Wrong file struct");
 
     string lengthPart = firstDigit(s);
-    size_t digitsInString = lengthPart.size();
+    size_t digitsInstring = lengthPart.size();
 
     int length = stoi(lengthPart);
 
-    if (digitsInString + 1 + length > s.size() || s[digitsInString + 1] == ':')
+    if (digitsInstring + 1 + length > s.size() || s[digitsInstring + 1] == ':')
         throw std::invalid_argument("Wrong file struct");
 
     return pair<string, int>(
-        s.substr(digitsInString + 1, length),
-        digitsInString + 1 + length
+        s.substr(digitsInstring + 1, length),
+        digitsInstring + 1 + length
     );
 }
 
@@ -117,7 +117,7 @@ pair<Value, int> Decoder::_decode(const string& s) {
     pair<ValueVector, int> pairList;
     pair<ValueDictionary, int> pairDict;
     pair<unsigned long long, int> pairInt;
-    pair<string, int> pairString;
+    pair<string, int> pairstring;
 
     while (0 < s.length()) {
         char currChar = s[index];
@@ -142,9 +142,9 @@ pair<Value, int> Decoder::_decode(const string& s) {
             return result;
 
         default:
-            pairString = decodeString(s.substr(index));
-            index += pairString.second;
-            result = pair<Value, int>(pairString.first, index);
+            pairstring = decodestring(s.substr(index));
+            index += pairstring.second;
+            result = pair<Value, int>(pairstring.first, index);
             return result;
         }
     }

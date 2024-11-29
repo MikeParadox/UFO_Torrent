@@ -1,23 +1,38 @@
-#include "ufo_torrent.h"
+﻿#include "ufo_torrent.h"
 
 #include <iostream>
 #include <ncurses.h>
 #include <string>
-#include <fstream>
 
 #include "../includes/prettyPrinter.h"
 #include "../includes/decode.h"
 #include "../includes/torrentFile.h"
 #include "../includes/encode.h"
-#include <filesystem>
+#include "../includes/fileUtils.h"
+#include "../includes/createHash.h"
+#include <boost/locale.hpp>
 
 using namespace bencode;
 using namespace Torrent;
+using namespace File;
+using namespace Hash;
+
 
 int main()
 {
-    TorrentFile file = parseTorrentFile(Decoder::decode(readFile("exemple.torrent")));
-    Value valueFile = toValue(file);
+    TorrentFile torrent = createTorrentFile(
+        "exemple",
+        {
+            { "exemple" },
+            { "aaaaaaa" }
+        },
+        "MyProject",
+        "test",
+        "John Doe",
+        std::time(nullptr)
+    );
 
-    boost::apply_visitor(PrettyPrinter(), valueFile);
+    std::string data = Encoder::encode(toValue(torrent));
+
+    // createFile("aa.torrent", data);
 }

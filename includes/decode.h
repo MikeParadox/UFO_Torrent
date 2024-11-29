@@ -25,7 +25,7 @@ namespace bencode
 		static std::pair<unsigned long long, int> decodeInt(const std::string& s);
 
 		// Декодирование первого стринга в строке
-		static std::pair<std::string, int> decodeString(const std::string& s);
+		static std::pair<std::string, int> decodestring(const std::string& s);
 
 		// Декодирования листа
 		static std::pair<ValueVector, int> decodeList(const std::string& s);

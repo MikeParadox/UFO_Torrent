@@ -13,7 +13,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp ./models/torrentFile.cpp
                       ./bencode/decode.cpp
                       ./bencode/prettyPrinter.cpp
-                      ./bencode/encode.cpp)
+                      ./bencode/encode.cpp
+                      ./hashing/createHash.cpp
+                      ./utils/fileUtils.cpp)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
