@@ -14,8 +14,11 @@ add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp ./models/torrentFi
                       ./bencode/decode.cpp
                       ./bencode/prettyPrinter.cpp
                       ./bencode/encode.cpp
-                      ./bencode/prettyPrinter.cpp "ncurses_utils.cpp")
-
+                      ./bencode/prettyPrinter.cpp 
+                      "ncurses_utils.cpp"
+                      ./bencode/encode.cpp
+                      ./hashing/createHash.cpp
+                      ./utils/fileUtils.cpp)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
