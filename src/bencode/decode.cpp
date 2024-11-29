@@ -10,6 +10,7 @@ using std::string;
 using std::pair;
 using std::string;
 
+
 bool stringToLongLong(const std::string& str, unsigned long long& result) {
     try {
         result = boost::lexical_cast<unsigned long long>(str);
@@ -154,3 +155,5 @@ pair<Value, int> Decoder::_decode(const string& s) {
 Value Decoder::decode(const string& string) {
     return _decode(string).first;
 }
+
+pair<ValueDictionary, int> Dt::decodeDc(const string& s) { return Decoder::decodeDict(s); }
