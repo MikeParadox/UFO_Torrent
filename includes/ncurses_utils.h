@@ -11,4 +11,6 @@ std::string inputFilePath(WINDOW* input_win);
 
 int countLinesForOutput(Torrent::TorrentFile file);
 
+bool strSizeComp(const std::string& str1, const std::string& str2);
+
 #endif

@@ -24,11 +24,14 @@ int main()
     curs_set(0);
 
     std::vector<std::string> menu_items = { "Scan file", "exit" };
+    
     size_t highlight = 0;
     size_t choice = 0;
 
-    int menu_height = menu_items.size() + 2;
-    int menu_width = 13, menu_start_y = 1, menu_start_x = 1;
+    int menu_height = menu_items.size()+2;
+    int menu_width = (*std::max_element(menu_items.begin(),menu_items.end(),strSizeComp)).size()+4;
+    int menu_start_y = 1;
+    int menu_start_x = 1;
     WINDOW* menu_win = newwin(menu_height, menu_width, menu_start_y, menu_start_x);
     keypad(menu_win, true);
 
