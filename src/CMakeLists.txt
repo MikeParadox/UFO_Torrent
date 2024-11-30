@@ -22,18 +22,9 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.45.0 COMPONENTS *boost libraries here*) 
 
-# if(Boost_FOUND)
-#     add_executable(progname file1.cxx file2.cxx) 
-#     target_link_libraries(progname ${Boost_LIBRARIES})
-# endif()
-
-
 target_link_libraries(main PRIVATE 
   Testing
   ${CURSES_LIBRARIES}
   ${Boost_LIBRARIES}
 )
-
-# TODO: Добавьте тесты и целевые объекты, если это необходимо.
-
 
