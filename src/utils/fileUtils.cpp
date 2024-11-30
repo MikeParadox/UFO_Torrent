@@ -1,9 +1,5 @@
 #include "fileUtils.h"
 
-string File::read(const std::string& filePath) {
-	// TODO
-	return "";
-}
 
 unsigned long long File::getFileSize(const std::string& filePath) {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
@@ -25,4 +21,19 @@ void File::createFile(const std::string& filePath, const std::string& binaryCont
 		throw std::runtime_error("Failed to write data to file: " + filePath);
 
 	outFile.close();
+}
+
+string File::read(const std::string& filePath) {
+	std::ifstream inputFile(filePath);
+	if (!inputFile.is_open())
+		throw std::runtime_error("Failed to open file: " + filePath);
+
+
+	std::string content((std::istreambuf_iterator<char>(inputFile)),
+		std::istreambuf_iterator<char>());
+
+	inputFile.close();
+
+
+	return content;
 }
