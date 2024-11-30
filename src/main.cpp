@@ -143,15 +143,18 @@ int main()
                     wrefresh(input_win);
 
                     Torrent::TorrentFile torrent = Torrent::createTorrentFile("exemple", { {"exemple"} }, userName, folderPath);
-                    std::string filePath = inputFilePath(input_win, "Put a path to place for file (with fileName): ");
+                    std::string filePath = inputFilePath(input_win, "Put a path to place for file: ");
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    wrefresh(input_win);
+
+                    filePath += inputFilePath(input_win, "Put a fileName here:") + ".torrent";
                     werase(input_win);
                     box(input_win, 0, 0);
                     wrefresh(input_win);
 
                     std::string data = Encoder::encode(toValue(torrent));
                     createFile(filePath, data);
-
-                    
 
                     mvwprintw(input_win, 1, 1, "Press any button");
                     wrefresh(input_win);
