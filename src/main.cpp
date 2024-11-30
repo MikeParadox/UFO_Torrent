@@ -72,7 +72,7 @@ int main()
                 wrefresh(input_win);
                 try 
                 {
-                    TorrentFile file = parseTorrentFile(Decoder::decode(readFile(inputFilePath(input_win))));
+                    TorrentFile file = parseTorrentFile(Decoder::decode(read(inputFilePath(input_win))));
                     //TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../exemple.torrent")));
                     int y_output = countLinesForOutput(file);
                     WINDOW* output_win = newwin(y_output, 50, input_start_y, input_start_x);
@@ -103,6 +103,16 @@ int main()
                     werase(input_win);
                     box(input_win, 0, 0);
                     mvwprintw(input_win, 1, 1, "No such file!");
+                    mvwprintw(input_win, 2, 1, "Press any button");
+                    wrefresh(input_win);
+                    wgetch(input_win);
+                    delwin(input_win);
+                }
+                catch (std::invalid_argument& e)
+                {
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    mvwprintw(input_win, 1, 1, "Wrong format file!");
                     mvwprintw(input_win, 2, 1, "Press any button");
                     wrefresh(input_win);
                     wgetch(input_win);
