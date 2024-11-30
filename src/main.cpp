@@ -3,6 +3,7 @@
 #include <iostream>
 #include <ncurses.h>
 #include <string>
+#include <vector>
 
 #include "../includes/prettyPrinter.h"
 #include "../includes/decode.h"
@@ -18,8 +19,7 @@ using namespace bencode;
 using namespace Torrent;
 using namespace File;
 using namespace Hash;
-#include <vector>
-#include <string>
+
 
 int main() 
 {
@@ -28,7 +28,7 @@ int main()
     cbreak();
     curs_set(0);
 
-    std::vector<std::string> menu_items = { "Scan file", "exit" };
+    std::vector<std::string> menu_items = { "Scan file", "Create torrent file", "exit"};
     
     size_t highlight = 0;
     size_t choice = 0;
@@ -122,6 +122,35 @@ int main()
                 refresh();
             }
             else if (choice == 2)
+            {
+                int input_height = 8, input_width = 50;
+                int input_start_y = menu_start_y;
+                int input_start_x = menu_start_x + menu_width;
+                WINDOW* input_win = newwin(input_height, input_width, input_start_y, input_start_x);
+                box(input_win, 0, 0);
+                wrefresh(input_win);
+                try
+                {
+                //#todo
+                    mvwprintw(input_win, 1, 1, "Not implemented yet");
+                    wrefresh(input_win);
+                    wgetch(input_win);
+                    wclear(input_win);
+                }
+                catch (std::runtime_error& e)
+                {
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    mvwprintw(input_win, 1, 1, "Operations with file failed");
+                    mvwprintw(input_win, 2, 1, "Press any button");
+                    wrefresh(input_win);
+                    wgetch(input_win);
+                    delwin(input_win);
+                }
+                clear();
+                refresh();
+            }
+            else if (choice == menu_items.size())
             {  
                 break;
             }
