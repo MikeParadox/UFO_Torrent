@@ -14,5 +14,19 @@ unsigned long long File::getFileSize(const std::string& filePath) {
 }
 
 void File::createFile(const std::string& filePath, const std::string& binaryContent) {
+	std::ofstream outFile(filePath, std::ios::binary);
+
+	if (!outFile)
+		throw std::runtime_error("Failed to open file: " + filePath);
+
+	outFile.write(binaryContent.c_str(), binaryContent.size());
+
+	if (!outFile)
+		throw std::runtime_error("Failed to write data to file: " + filePath);
+
+	outFile.close();
+}
+
+void File::createFile(const std::string& filePath, const std::string& binaryContent) {
     // TODO
 }
