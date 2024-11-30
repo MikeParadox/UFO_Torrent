@@ -26,7 +26,3 @@ void File::createFile(const std::string& filePath, const std::string& binaryCont
 
 	outFile.close();
 }
-
-void File::createFile(const std::string& filePath, const std::string& binaryContent) {
-    // TODO
-}
