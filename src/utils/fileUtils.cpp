@@ -27,6 +27,17 @@ void File::createFile(const std::string& filePath, const std::string& binaryCont
 	outFile.close();
 }
 
-void File::createFile(const std::string& filePath, const std::string& binaryContent) {
-    // TODO
+string File::read(const std::string& filePath) {
+	std::ifstream inputFile(filePath);
+	if (!inputFile.is_open())
+		throw std::runtime_error("Failed to open file: " + filePath);
+
+
+	std::string content((std::istreambuf_iterator<char>(inputFile)),
+		std::istreambuf_iterator<char>());
+
+	inputFile.close();
+
+
+	return content;
 }
