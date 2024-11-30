@@ -1,9 +1,5 @@
 #include "fileUtils.h"
 
-string File::read(const std::string& filePath) {
-	// TODO
-	return "";
-}
 
 unsigned long long File::getFileSize(const std::string& filePath) {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
