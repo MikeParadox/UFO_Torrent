@@ -1,18 +1,23 @@
-#include "ufo_torrent.h"
+﻿#include "ufo_torrent.h"
 
 #include <iostream>
 #include <ncurses.h>
-#include <fstream>
+#include <string>
 
 #include "../includes/prettyPrinter.h"
 #include "../includes/decode.h"
 #include "../includes/torrentFile.h"
 #include "../includes/encode.h"
+#include "../includes/fileUtils.h"
+#include "../includes/createHash.h"
+#include <boost/locale.hpp>
 #include <filesystem>
 #include "ncurses_utils.h"
 
 using namespace bencode;
 using namespace Torrent;
+using namespace File;
+using namespace Hash;
 #include <vector>
 #include <string>
 

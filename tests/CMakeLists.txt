@@ -19,10 +19,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 # FetchContent_MakeAvailable(googletest)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(ufo_tests test.cpp)
+add_executable(ufo_tests ../src/bencode/decode.cpp test.cpp)
 target_link_libraries(ufo_tests Testing GTest::gtest_main
-  ${CURSES_LIBRARIES}
-  ${Boost_LIBRARIES}
+${CURSES_LIBRARIES} 
+${Boost_LIBRARIES} 
 )
 include(GoogleTest)
 gtest_discover_tests(ufo_tests)

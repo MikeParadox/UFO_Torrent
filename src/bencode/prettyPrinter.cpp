@@ -46,8 +46,8 @@ void PrettyPrinter::operator()(const std::string& t) const
     if (!isAscii(t))
         std::cout << "BINARY DATA (length: " << t.size() << ")" << std::endl;
     else {
-        const int MAX_STRING_LENGTH = 100;
-        std::cout << t.substr(0, MAX_STRING_LENGTH) << std::endl;
+        const int MAX_string_LENGTH = 100;
+        std::cout << t.substr(0, MAX_string_LENGTH) << std::endl;
     }
 }
 
