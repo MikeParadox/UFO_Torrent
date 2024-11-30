@@ -7,7 +7,7 @@
 
 void display_menu(WINDOW* menu_win, const std::vector<std::string>& menu_items, size_t highlight);
 
-std::string inputFilePath(WINDOW* input_win);
+std::string inputFilePath(WINDOW* input_win,std::string message);
 
 int countLinesForOutput(Torrent::TorrentFile file);
 

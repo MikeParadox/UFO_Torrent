@@ -28,7 +28,7 @@ int main()
     cbreak();
     curs_set(0);
 
-    std::vector<std::string> menu_items = { "Scan file", "Create torrent file", "exit"};
+    std::vector<std::string> menu_items = { "Scan file", "Create example torrent", "exit"};
     
     size_t highlight = 0;
     size_t choice = 0;
@@ -72,7 +72,7 @@ int main()
                 wrefresh(input_win);
                 try 
                 {
-                    TorrentFile file = parseTorrentFile(Decoder::decode(read(inputFilePath(input_win))));
+                    TorrentFile file = parseTorrentFile(Decoder::decode(read(inputFilePath(input_win, "Put a path to file here:"))));
                     //TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../exemple.torrent")));
                     int y_output = countLinesForOutput(file);
                     WINDOW* output_win = newwin(y_output, 50, input_start_y, input_start_x);
@@ -132,7 +132,28 @@ int main()
                 try
                 {
                 //#todo
-                    mvwprintw(input_win, 1, 1, "Not implemented yet");
+                    std::string folderPath = inputFilePath(input_win, "Put a path to folder here: ");
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    wrefresh(input_win);
+
+                    std::string userName = inputFilePath(input_win, "Put your name here: ");
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    wrefresh(input_win);
+
+                    Torrent::TorrentFile torrent = Torrent::createTorrentFile("exemple", { {"exemple"} }, userName, folderPath);
+                    std::string filePath = inputFilePath(input_win, "Put a path to place for file (with fileName): ");
+                    werase(input_win);
+                    box(input_win, 0, 0);
+                    wrefresh(input_win);
+
+                    std::string data = Encoder::encode(toValue(torrent));
+                    createFile(filePath, data);
+
+                    
+
+                    mvwprintw(input_win, 1, 1, "Press any button");
                     wrefresh(input_win);
                     wgetch(input_win);
                     wclear(input_win);

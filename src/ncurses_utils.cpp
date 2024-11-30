@@ -23,13 +23,13 @@ void display_menu(WINDOW* menu_win, const std::vector<std::string>& menu_items, 
     wrefresh(menu_win);
 }
 
-std::string inputFilePath(WINDOW* input_win) 
+std::string inputFilePath(WINDOW* input_win,std::string message) 
 {
     char input[256] = { 0 };  // Буфер для ввода текста
     int ch;
     int pos = 0;
     // Отображаем приглашение к вводу
-    mvwprintw(input_win, 1, 1, "Put a path to file here:");
+    mvwprintw(input_win, 1, 1, message.c_str());
     wrefresh(input_win);
     while (true) 
     {
