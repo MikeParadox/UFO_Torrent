@@ -20,168 +20,126 @@ using namespace Torrent;
 using namespace File;
 using namespace Hash;
 
+void print_menu(WINDOW* win, int highlight, const std::vector<std::string>& menu_items) {
+    int y = 1;
+    for (size_t i = 0; i < menu_items.size(); ++i) {
+        if (i == (size_t)highlight) {
+            wattron(win, A_REVERSE);
+        }
+        mvwprintw(win, y++, 1, "%s", menu_items[i].c_str());
+        wattroff(win, A_REVERSE);
+    }
+    wrefresh(win);
+}
 
-int main() 
-{
+int main() {
+    // Initialize ncurses
     initscr();
-    noecho();
     cbreak();
+    noecho();
     curs_set(0);
 
-    std::vector<std::string> menu_items = { "Scan file", "Create example torrent", "exit"};
-    
-    size_t highlight = 0;
-    size_t choice = 0;
-    
-    int menu_height = menu_items.size()+2;
-    int menu_width = (*std::max_element(menu_items.begin(),menu_items.end(),strSizeComp)).size()+4;
-    int menu_start_y = 1;
-    int menu_start_x = 1;
-    WINDOW* menu_win = newwin(menu_height, menu_width, menu_start_y, menu_start_x);
-    keypad(menu_win, true);
+    // Define menus
+    std::vector<std::string> menu_obj = {
+        "add Torrent",
+        "Verify hash",
+        "options?",
+        "Exit"
+    };
 
-    while (true)
-    {
-        
-        display_menu(menu_win, menu_items, highlight);
+    std::vector<std::string> sec_obj = {
+        "Torrent1",
+        "Torrent2",
+        "Torrent3",
+    };
 
-        int ch = wgetch(menu_win);
-        switch (ch)
-        {
-        case KEY_UP:
-            if (highlight > 0) --highlight;
-            break;
-        case KEY_DOWN:
-            if (highlight < menu_items.size()-1) ++highlight;
-            break;
-        case '\n':  // Enter
-            choice = highlight + 1;
-            break;
-        default:
-            break;
+    // Create windows for both menus
+    int rows = 10, cols = 20; // Dimensions for each window
+    WINDOW* main_win = newwin(menu_obj.size()+2, cols, 0, 0); // Main menu on the left
+    WINDOW* tor_win = newwin(rows, cols, 0, cols); // Secondary menu on the right
+
+    box(main_win, 0, 0); // Draw borders
+    box(tor_win, 0, 0);
+
+    wrefresh(main_win);
+    wrefresh(tor_win);
+
+    // Variables for menu selection
+    int current_menu = 0; // 0: Main menu, 1: Secondary menu
+    int main_highlight = 0; // Highlighted item in the main menu
+    int secondary_highlight = 0; // Highlighted item in the secondary menu
+
+    int key;
+    while (true) {
+        if (current_menu == 0) { // Main menu is active
+            print_menu(main_win, main_highlight, menu_obj);
+            print_menu(tor_win, secondary_highlight, sec_obj);
+
+            wrefresh(tor_win);
+
+            key = wgetch(main_win);
         }
-        if (choice != 0)
-        {
-            if (choice == 1)
-            {  
-                int input_height = 8, input_width = 50;
-                int input_start_y = menu_start_y;
-                int input_start_x = menu_start_x+menu_width;
-                WINDOW* input_win = newwin(input_height, input_width, input_start_y, input_start_x);
-                box(input_win, 0, 0);
-                wrefresh(input_win);
-                try 
-                {
-                    TorrentFile file = parseTorrentFile(Decoder::decode(read(inputFilePath(input_win, "Put a path to file here:"))));
-                    //TorrentFile file = parseTorrentFile(Decoder::decode(readFile("../../exemple.torrent")));
-                    int y_output = countLinesForOutput(file);
-                    WINDOW* output_win = newwin(y_output, 50, input_start_y, input_start_x);
-                    werase(input_win);
+        else { // Secondary menu is active
+            print_menu(main_win, main_highlight, menu_obj);
+            print_menu(tor_win, secondary_highlight, sec_obj);
 
-                    box(output_win, 0, 0);
-                    int curr_y = 1;
-                    mvwprintw(output_win, curr_y++, 1, "Your file content: ");
-                    mvwprintw(output_win, curr_y++, 1, "Announce: %s", file.announce.c_str());
-                    if (file.createdBy.has_value()) mvwprintw(output_win, curr_y++, 1, "CreatedBy: %s", file.createdBy.value().c_str());
-                    if (file.creationDate.has_value()) mvwprintw(output_win, curr_y++, 1, "CreationDate: %s", std::to_string(file.creationDate.value()).c_str());
-                    mvwprintw(output_win, curr_y++, 1, "Internal structure: ");
-                    mvwprintw(output_win, curr_y++, 1, "%s", file.info.name.c_str());
-                    for (size_t i = 0; i < file.info.files.size(); i++)
-                    {
-                        for (size_t j = 0; j < file.info.files[i].path.size(); j++)
-                        {
-                            mvwprintw(output_win, curr_y++, 1, "  %s", file.info.files[i].path[j].c_str());
-                        }
-                    }
-                    mvwprintw(output_win, curr_y++, 1, "Press any button");
-                    wrefresh(output_win);
-                    wgetch(output_win);
-                    wclear(output_win);
-                }
-                catch (std::runtime_error& e)
-                {
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    mvwprintw(input_win, 1, 1, "No such file!");
-                    mvwprintw(input_win, 2, 1, "Press any button");
-                    wrefresh(input_win);
-                    wgetch(input_win);
-                    delwin(input_win);
-                }
-                catch (std::invalid_argument& e)
-                {
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    mvwprintw(input_win, 1, 1, "Wrong format file!");
-                    mvwprintw(input_win, 2, 1, "Press any button");
-                    wrefresh(input_win);
-                    wgetch(input_win);
-                    delwin(input_win);
-                }
-                clear();
-                refresh();
+            key = wgetch(tor_win);
+        }
+
+        // Handle user input
+        switch (key) {
+        case KEY_UP: // Move up
+            if (current_menu == 0 && main_highlight > 0) {
+                main_highlight--;
             }
-            else if (choice == 2)
-            {
-                int input_height = 8, input_width = 50;
-                int input_start_y = menu_start_y;
-                int input_start_x = menu_start_x + menu_width;
-                WINDOW* input_win = newwin(input_height, input_width, input_start_y, input_start_x);
-                box(input_win, 0, 0);
-                wrefresh(input_win);
-                try
-                {
-                //#todo
-                    std::string folderPath = inputFilePath(input_win, "Put a path to folder here: ");
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    wrefresh(input_win);
-
-                    std::string userName = inputFilePath(input_win, "Put your name here: ");
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    wrefresh(input_win);
-
-                    Torrent::TorrentFile torrent = Torrent::createTorrentFile("exemple", { {"exemple"} }, userName, folderPath);
-                    std::string filePath = inputFilePath(input_win, "Put a path to place for file: ");
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    wrefresh(input_win);
-
-                    filePath += inputFilePath(input_win, "Put a fileName here:") + ".torrent";
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    wrefresh(input_win);
-
-                    std::string data = Encoder::encode(toValue(torrent));
-                    createFile(filePath, data);
-
-                    mvwprintw(input_win, 1, 1, "Press any button");
-                    wrefresh(input_win);
-                    wgetch(input_win);
-                    wclear(input_win);
-                }
-                catch (std::runtime_error& e)
-                {
-                    werase(input_win);
-                    box(input_win, 0, 0);
-                    mvwprintw(input_win, 1, 1, "Operations with file failed");
-                    mvwprintw(input_win, 2, 1, "Press any button");
-                    wrefresh(input_win);
-                    wgetch(input_win);
-                    delwin(input_win);
-                }
-                clear();
-                refresh();
+            else if (current_menu == 1 && secondary_highlight > 0) {
+                secondary_highlight--;
             }
-            else if (choice == menu_items.size())
-            {  
+            break;
+
+        case KEY_DOWN: // Move down
+            if (current_menu == 0 && main_highlight < static_cast<int>(menu_obj.size()) - 1) {
+                main_highlight++;
+            }
+            else if (current_menu == 1 && secondary_highlight < static_cast<int>(sec_obj.size()) - 1) {
+                secondary_highlight++;
+            }
+            break;
+
+        case KEY_LEFT: // Switch to main menu
+            if (current_menu == 1) {
+                current_menu = 0;
+            }
+            break;
+
+        case KEY_RIGHT: // Switch to secondary menu
+            if (current_menu == 0) {
+                current_menu = 1;
+            }
+            break;
+
+        case 10: // Enter key
+            if (current_menu == 0 && main_highlight == static_cast<int>(menu_obj.size()) - 1) {
+                // Exit if "Exit" is selected in the main menu
                 break;
             }
-            choice = 0;  
+            else if (current_menu == 1 && secondary_highlight == static_cast<int>(sec_obj.size()) - 1) {
+                // Go back to the main menu
+                current_menu = 0;
+            }
+            break;
+        }
+
+        // Exit the loop if "Exit" is selected
+        if (current_menu == 0 && main_highlight == static_cast<int>(menu_obj.size()) - 1) {
+            break;
         }
     }
 
+    // Clean up
+    delwin(main_win);
+    delwin(tor_win);
     endwin();
+
     return 0;
 }
