@@ -34,6 +34,7 @@ void print_menu(WINDOW* win, int highlight, const std::vector<std::string>& menu
 
 int main() {
     // Initialize ncurses
+
     initscr();
     cbreak();
     noecho();
