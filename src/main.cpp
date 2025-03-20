@@ -157,43 +157,41 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
     std::vector<std::string> files;
     int selected = 0;
 
-    // Maximum visible lines
     const int MAX_VISIBLE_LINES = 7;      
-    const int PADDING = 3;          // Padding from the left border
+    const int PADDING = 3;          
 
     while (true) {
         files.clear();
-        // Always add ".." to go up to the parent directory
         files.push_back("..");
 
-        // List files and directories
+        // all files
         for (const auto& entry : fs::directory_iterator(currentDir)) {
             files.push_back(entry.path().filename().string());
         }
 
-        // Calculate the start index for scrolling
+        // maybe will be deleted
         int startIndex = 0;
         if (selected >= MAX_VISIBLE_LINES) {
             startIndex = selected - MAX_VISIBLE_LINES + 1;
         }
 
-        // Calculate the number of rows needed
+        // meybe will be deleted
         int numRows = std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
-        numRows = std::max(numRows, 3); // Ensure at least 3 rows are displayed
+        numRows = std::max(numRows, 3);
 
         werase(win);
 
 
-        // Print title and current directory with padding
+        // help
         mvwprintw(win, 0, PADDING, "Select a .torrent file ");
         mvwprintw(win, 1, PADDING, "(ENTER to select, Q to quit):");
 
-        // Print current directory
+        // current path
         mvwprintw(win, 2, PADDING, "Current Directory: %s", currentDir.c_str());
 
         int currDirLines = (22 + currentDir.size()) / 40;
 
-        // Display files and directories
+        // render files
         for (int i = 0; i < numRows; ++i) {
             int fileIndex = startIndex + i;
             if (fileIndex < (int)files.size()) {
@@ -208,7 +206,7 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
         }
         wrefresh(win);
 
-        // Handle input
+        // hangle loop
         int key = wgetch(win);
         switch (key) {
         case KEY_UP:
@@ -250,18 +248,18 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
 
 
 int main() {
-    // Initialize ncurses
+    // init
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     start_color();
 
-    // Define color pairs
+    // highlite color
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
 
-    // Define menu items for the left menu
+    // left options
     const char* left_choices[] = {
         "Add Torrent",
         "Verify Hash",
@@ -270,7 +268,7 @@ int main() {
         nullptr
     };
 
-    // Define menu items for the right menu
+    //right options
     const char* right_choices[] = {
         "Start Download",
         "Pause Download",
@@ -279,45 +277,44 @@ int main() {
         nullptr
     };
 
-    // Create ITEMs for the left menu
+    // left items
     ITEM** left_items = new ITEM * [4];
     for (int i = 0; i < 4; ++i) {
         left_items[i] = new_item(left_choices[i], "");
     }
     left_items[4] = nullptr;
 
-    // Create ITEMs for the right menu
+    // right items
     ITEM** right_items = new ITEM * [4];
     for (int i = 0; i < 4; ++i) {
         right_items[i] = new_item(right_choices[i], "");
     }
     right_items[4] = nullptr;
 
-    // Create the menus
     MENU* left_menu = new_menu(left_items);
     MENU* right_menu = new_menu(right_items);
 
-    // Create windows for the menus
+    // menu windowses
     WINDOW* left_win = newwin(10, 30, 2, 2);
     WINDOW* right_win = newwin(10, 30, 2, 34);
     keypad(left_win, TRUE);
     keypad(right_win, TRUE);
 
-    // Set the menu windows and subwindows
+    // sizes of menus
     set_menu_win(left_menu, left_win);
     set_menu_sub(left_menu, derwin(left_win, 6, 28, 3, 1));
     set_menu_win(right_menu, right_win);
     set_menu_sub(right_menu, derwin(right_win, 6, 28, 3, 1));
 
-    // Set menu options
+    // menu options
     set_menu_mark(left_menu, " * ");
     set_menu_mark(right_menu, " * ");
 
-    // Post both menus
+    // Post
     post_menu(left_menu);
     post_menu(right_menu);
 
-    // Draw boxes around the windows
+    // borders
     box(left_win, 0, 0);
     box(right_win, 0, 0);
 
@@ -327,15 +324,15 @@ int main() {
     wrefresh(left_win);
     wrefresh(right_win);
 
-    // Track the active menu (0 = left, 1 = right)
+    // tracking
     auto active_win = left_win;
     auto active_menu = left_menu;
 
-    // Highlight the active menu initially
+    // active menu
     set_menu_fore(left_menu, COLOR_PAIR(1));
     set_menu_fore(right_menu, COLOR_PAIR(2));
 
-    // Menu interaction loop
+    // Menu navigation
     int key;
     while ((key = wgetch(active_win)) != KEY_F(1)) {
         switch (key) {
@@ -360,10 +357,10 @@ int main() {
             ITEM* cur_item = current_item(active_menu);
             int choice = item_index(cur_item);
 
-            // Handle the selected choice
+            // Handle choice
             if (active_menu == left_menu) {
                 if (choice == 0) { // Add Torrent
-                    // Create a new window for the file dialog
+                    
                     WINDOW* fileWin = newwin(14, 50, 5, 10);
                     box(fileWin, 0, 0);
                     wrefresh(fileWin);
@@ -376,9 +373,10 @@ int main() {
                     refresh();
                     redrawwin(left_win);
                     redrawwin(right_win);
+                    //next draft
                     if (!selectedFile.empty()) {
                         mvprintw(12, 2, "Selected file: %s", selectedFile.c_str());
-                        // Here you can add code to handle the selected .torrent file
+                        
                     }
                 }
                 else if (choice == 3) { // Exit
@@ -392,6 +390,7 @@ int main() {
         wrefresh(right_win);
     }
 
+    //delete all sht
 exit:
     unpost_menu(left_menu);
     unpost_menu(right_menu);
