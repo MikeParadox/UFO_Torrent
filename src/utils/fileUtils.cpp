@@ -4,7 +4,7 @@
 unsigned long long File::getFileSize(const std::string& filePath) {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 	if (!file.is_open())
-		throw std::runtime_error("Не удалось открыть файл: " + filePath);
+		throw std::runtime_error("Failed to open file: " + filePath);
 
 	return file.tellg(); 
 }
