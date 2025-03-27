@@ -1,13 +1,12 @@
 #include "TorrentFileParser.h"
+#include "Decoder.h"
+#include "bencoding.h"
 #include "sha1.h"
-#include <bencode/BItem.h>
-#include <bencode/Decoder.h>
-#include <bencode/bencoding.h>
 #include <cassert>
-#include <crypto/sha1.h>
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <sha1.h>
 #include <stdexcept>
 
 constexpr int hash_len{20};
@@ -70,7 +69,7 @@ std::vector<std::string> TorrentFileParser::splitPieceHashes() const
 
     std::vector<std::string> pieceHashes;
 
-    assert(pieces.size() % HASH_LEN == 0);
+    assert(pieces.size() % hash_len == 0);
     int piecesCount = (int)pieces.size() / hash_len;
     pieceHashes.reserve(piecesCount);
     for (int i = 0; i < piecesCount; i++)

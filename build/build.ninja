@@ -74,31 +74,94 @@ build cmake_object_order_depends_target_Testing: phony || src/CMakeFiles/Testing
 
 build src/CMakeFiles/Testing.dir/ufo_torrent.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/ufo_torrent.cpp || cmake_object_order_depends_target_Testing
   DEP_FILE = src/CMakeFiles/Testing.dir/ufo_torrent.cpp.o.d
-  FLAGS = -std=gnu++23
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = src/CMakeFiles/Testing.dir
   OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir
 
 build src/CMakeFiles/Testing.dir/bencode/decode.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/bencode/decode.cpp || cmake_object_order_depends_target_Testing
   DEP_FILE = src/CMakeFiles/Testing.dir/bencode/decode.cpp.o.d
-  FLAGS = -std=gnu++23
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = src/CMakeFiles/Testing.dir
   OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/bencode
 
 build src/CMakeFiles/Testing.dir/bencode/prettyPrinter.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/bencode/prettyPrinter.cpp || cmake_object_order_depends_target_Testing
   DEP_FILE = src/CMakeFiles/Testing.dir/bencode/prettyPrinter.cpp.o.d
-  FLAGS = -std=gnu++23
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = src/CMakeFiles/Testing.dir
   OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/bencode
 
 build src/CMakeFiles/Testing.dir/bencode/encode.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/bencode/encode.cpp || cmake_object_order_depends_target_Testing
   DEP_FILE = src/CMakeFiles/Testing.dir/bencode/encode.cpp.o.d
-  FLAGS = -std=gnu++23
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = src/CMakeFiles/Testing.dir
   OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/bencode
+
+build src/CMakeFiles/Testing.dir/network_part/BitTorrentMessage.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/BitTorrentMessage.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/BitTorrentMessage.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/connect.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/connect.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/connect.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/PeerConnection.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/PeerConnection.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/PeerConnection.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/PeerRetriever.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/PeerRetriever.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/PeerRetriever.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/Piece.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/Piece.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/Piece.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/PieceManager.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/PieceManager.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/PieceManager.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/TorrentClient.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/TorrentClient.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/TorrentClient.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/TorrentFileParser.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/TorrentFileParser.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/TorrentFileParser.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
+
+build src/CMakeFiles/Testing.dir/network_part/utils.cpp.o: CXX_COMPILER__Testing_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/network_part/utils.cpp || cmake_object_order_depends_target_Testing
+  DEP_FILE = src/CMakeFiles/Testing.dir/network_part/utils.cpp.o.d
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
+  OBJECT_DIR = src/CMakeFiles/Testing.dir
+  OBJECT_FILE_DIR = src/CMakeFiles/Testing.dir/network_part
 
 
 # =============================================================================
@@ -108,7 +171,7 @@ build src/CMakeFiles/Testing.dir/bencode/encode.cpp.o: CXX_COMPILER__Testing_uns
 #############################################
 # Link the static library src/libTesting.a
 
-build src/libTesting.a: CXX_STATIC_LIBRARY_LINKER__Testing_ src/CMakeFiles/Testing.dir/ufo_torrent.cpp.o src/CMakeFiles/Testing.dir/bencode/decode.cpp.o src/CMakeFiles/Testing.dir/bencode/prettyPrinter.cpp.o src/CMakeFiles/Testing.dir/bencode/encode.cpp.o
+build src/libTesting.a: CXX_STATIC_LIBRARY_LINKER__Testing_ src/CMakeFiles/Testing.dir/ufo_torrent.cpp.o src/CMakeFiles/Testing.dir/bencode/decode.cpp.o src/CMakeFiles/Testing.dir/bencode/prettyPrinter.cpp.o src/CMakeFiles/Testing.dir/bencode/encode.cpp.o src/CMakeFiles/Testing.dir/network_part/BitTorrentMessage.cpp.o src/CMakeFiles/Testing.dir/network_part/connect.cpp.o src/CMakeFiles/Testing.dir/network_part/PeerConnection.cpp.o src/CMakeFiles/Testing.dir/network_part/PeerRetriever.cpp.o src/CMakeFiles/Testing.dir/network_part/Piece.cpp.o src/CMakeFiles/Testing.dir/network_part/PieceManager.cpp.o src/CMakeFiles/Testing.dir/network_part/TorrentClient.cpp.o src/CMakeFiles/Testing.dir/network_part/TorrentFileParser.cpp.o src/CMakeFiles/Testing.dir/network_part/utils.cpp.o
   OBJECT_DIR = src/CMakeFiles/Testing.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -126,8 +189,8 @@ build cmake_object_order_depends_target_main: phony || cmake_object_order_depend
 
 build src/CMakeFiles/main.dir/main.cpp.o: CXX_COMPILER__main_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/src/main.cpp || cmake_object_order_depends_target_main
   DEP_FILE = src/CMakeFiles/main.dir/main.cpp.o.d
-  FLAGS = -std=gnu++23 -std=c++2b -fopenmp -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = src/CMakeFiles/main.dir
   OBJECT_FILE_DIR = src/CMakeFiles/main.dir
 
@@ -186,8 +249,8 @@ build cmake_object_order_depends_target_main_tests: phony || cmake_object_order_
 
 build tests/CMakeFiles/main_tests.dir/test.cpp.o: CXX_COMPILER__main_tests_unscanned_ /home/mikhail/programming/c++/projects/UFO-Torrent/tests/test.cpp || cmake_object_order_depends_target_main_tests
   DEP_FILE = tests/CMakeFiles/main_tests.dir/test.cpp.o.d
-  FLAGS = -std=gnu++23 -DGTEST_HAS_PTHREAD=1
-  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes
+  FLAGS = -std=gnu++23 -fdiagnostics-color=always -DGTEST_HAS_PTHREAD=1
+  INCLUDES = -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes -I/home/mikhail/programming/c++/projects/UFO-Torrent/includes/network_part -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/crypto -I/home/mikhail/programming/c++/projects/UFO-Torrent/libs/bencode
   OBJECT_DIR = tests/CMakeFiles/main_tests.dir
   OBJECT_FILE_DIR = tests/CMakeFiles/main_tests.dir
 
