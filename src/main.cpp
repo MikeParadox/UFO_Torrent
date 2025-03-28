@@ -15,6 +15,7 @@
 #include <boost/locale.hpp>
 #include <filesystem>
 #include "ncurses_utils.h"
+#include "menu.h"
 
 using namespace bencode;
 using namespace Torrent;
@@ -124,11 +125,12 @@ void refresh_right_win(WINDOW* right_win) {
     werase(right_win);
     box(right_win, 0, 0);
     mvwprintw(right_win, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
-    
+
     // Adjust selection if out of bounds
     if (!selectedTorrents.empty()) {
         right_win_selected = std::min(right_win_selected, (int)selectedTorrents.size() - 1);
-    } else {
+    }
+    else {
         right_win_selected = 0;
     }
 
@@ -136,7 +138,7 @@ void refresh_right_win(WINDOW* right_win) {
     int index = 0;
     for (const auto& torrent : selectedTorrents) {
         std::string displayName = fs::path(torrent).filename().string();
-        
+
         // Highlight selected item
         if (index == right_win_selected) {
             wattron(right_win, A_REVERSE);
@@ -145,7 +147,7 @@ void refresh_right_win(WINDOW* right_win) {
         if (index == right_win_selected) {
             wattroff(right_win, A_REVERSE);
         }
-        
+
         index++;
         if (row >= getmaxy(right_win) - 1) break;
     }
@@ -165,7 +167,7 @@ void redraw_interface(WINDOW* left_win, WINDOW* right_win, MENU* left_menu) {
 }
 
 int main() {
-    setlocale(LC_ALL, ""); 
+    setlocale(LC_ALL, "");
     initscr();
     cbreak();
     noecho();
@@ -177,8 +179,6 @@ int main() {
 
     const char* left_choices[] = {
         "Add Torrent",
-        "Verify Hash",
-        "Options",
         "Exit",
         nullptr
     };
@@ -216,7 +216,8 @@ int main() {
             if (in_right_pane && !selectedTorrents.empty()) {
                 right_win_selected = std::min(right_win_selected + 1, (int)selectedTorrents.size() - 1);
                 refresh_right_win(right_win);
-            } else if (!in_right_pane) {
+            }
+            else if (!in_right_pane) {
                 menu_driver(left_menu, REQ_DOWN_ITEM);
             }
             break;
@@ -224,7 +225,8 @@ int main() {
             if (in_right_pane && !selectedTorrents.empty()) {
                 right_win_selected = std::max(right_win_selected - 1, 0);
                 refresh_right_win(right_win);
-            } else if (!in_right_pane) {
+            }
+            else if (!in_right_pane) {
                 menu_driver(left_menu, REQ_UP_ITEM);
             }
             break;
@@ -240,9 +242,10 @@ int main() {
             break;
         case 10: // Enter key
         {
-            if (in_right_pane && !selectedTorrents.empty()) {
-                // Handle selection in right window
-                // You can add functionality here for when a torrent is selected
+
+            if (in_right_pane && !selectedTorrents.empty()) 
+            {
+                
             }
             else if (!in_right_pane) {
                 ITEM* cur_item = current_item(left_menu);
@@ -262,13 +265,13 @@ int main() {
 
                     if (!selectedFile.empty()) {
                         TorrentFile file = parseTorrentFile(Decoder::decode(read(selectedFile)));
-                        selectedTorrents.insert(selectedFile);  
+                        selectedTorrents.insert(selectedFile);
                         refresh_right_win(right_win);
                     }
                     redraw_interface(left_win, right_win, left_menu);
                     break;
                 }
-                case 3: // Exit
+                case 1: // Exit
                     goto exit;
                 }
             }
