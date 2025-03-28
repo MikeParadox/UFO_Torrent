@@ -2,7 +2,6 @@
 gtest/1.15.0
 ncurses/6.5
 boost/1.86.0
-cpr/1.10.4
 
 [generators]
 CMakeDeps

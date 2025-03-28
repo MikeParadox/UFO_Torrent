@@ -10,9 +10,6 @@ include_directories(${CURSES_INDLUDE_DIRS})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS}) 
 
-find_package(cpr REQUIRED)
-include_directories(${cpr_INCLUDE_DIRS})
-
 add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp ./models/torrentFile.cpp
                       ./bencode/decode.cpp
                       ./bencode/prettyPrinter.cpp
@@ -40,7 +37,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   Testing
   ${CURSES_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${cpr_LIBRARIES}
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
