@@ -1,4 +1,3 @@
-﻿ддд, [30.03.2025 20:40]
 #include "ufo_torrent.h"
 #include <iostream>
 #include <ncurses.h>
@@ -131,8 +130,7 @@ void refresh_right_win(WINDOW* right_win) {
     box(right_win, 0, 0);
     mvwprintw(right_win, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
 
-ддд, [30.03.2025 20:40]
-// Adjust selection if out of bounds
+    // Adjust selection if out of bounds
     if (!selectedTorrents.empty()) {
         right_win_selected = std::min(right_win_selected, (int)selectedTorrents.size() - 1);
     }
@@ -270,8 +268,7 @@ int main() {
                     delwin(fileWin);
                     delwin(truefileWin);
 
-ддд, [30.03.2025 20:40]
-if (!selectedFile.empty()) 
+                    if (!selectedFile.empty()) 
                     {
                         TorrentFile file = parseTorrentFile(Decoder::decode(read(selectedFile)));
                         selectedTorrents.insert(selectedFile);
