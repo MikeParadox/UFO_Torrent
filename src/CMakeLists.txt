@@ -10,8 +10,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
-# find_package(cpr REQUIRED)
-# include_directories(${cpr_INCLUDE_DIRS})
 
 add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp 
                       ./bencode/decode.cpp
@@ -24,8 +22,7 @@ add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp
                       ./network_part/connect.cpp
                       ./network_part/PeerConnection.cpp
                       ./network_part/PeerRetriever.cpp
-                      ./network_part/Piece.cpp
-                      
+                      ./network_part/Piece.cpp                      
                       ./network_part/PieceManager.cpp
                       ./network_part/TorrentClient.cpp
                       ./network_part/TorrentFileParser.cpp
@@ -57,6 +54,6 @@ target_link_libraries(main PRIVATE
   ${CURSES_LIBRARIES}
   ${Boost_LIBRARIES}
   CURL::libcurl
-  ${cpr_LIBRARIES}
   LibtorrentRasterbar::torrent-rasterbar
+  menu
 )

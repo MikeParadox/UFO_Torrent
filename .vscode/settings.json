@@ -1,6 +1,10 @@
 {
     "files.associations": {
+<<<<<<< HEAD
+        "chrono": "cpp"
+=======
         "chrono": "cpp",
         "*.ipp": "cpp"
+>>>>>>> 584a6e93e2ac3140da0bd6865900e7295a1f5faa
     }
 }
