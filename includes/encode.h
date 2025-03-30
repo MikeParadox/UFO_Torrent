@@ -14,7 +14,6 @@ namespace bencode {
 
     public:
         static string encode(const Value& value);
-
     };
 };
 

@@ -17,25 +17,25 @@ using namespace bencode;
 
 namespace Torrent {
 
-    // Структура для представления файлов внутри торрента
+	// file info
     struct TorrentFileInfo {
-        unsigned long long length;                      // Размер файла в байтах
-        vector<string> path;                            // Путь к файлу (например, ["data.bin"])
+        unsigned long long length;                      // file size
+        vector<string> path;                            // file path
     };
 
-    // Основная структура для описания торрента
+	// torrent file
     struct TorrentFile {
 
-        string announce;                                // Основной трекер
-        vector<vector<string>> announceList;            // Альтернативные трекеры
-        optional<string> createdBy;                     // Кто создал (если есть)
-        optional<time_t> creationDate;                  // Дата создания (UNIX Timestamp)
+		string announce;                                // tracker
+		vector<vector<string>> announceList;            // alternate trackers
+		optional<string> createdBy;                     // owner
+		optional<time_t> creationDate;                  // date of creation
 
         struct Info {
-            vector<TorrentFileInfo> files;              // Список файлов
-            string name;                                // Имя файла или папки
-            unsigned long long pieceLength;             // Размер одной части (в байтах)
-            string pieces;                              // Хеши всех частей (бинарные данные)
+			vector<TorrentFileInfo> files;              // all files
+            string name;                                // name 
+			unsigned long long pieceLength;             // piece size
+            string pieces;                              // hash
         } info;
     };
 
@@ -58,7 +58,9 @@ namespace Torrent {
         mutable TorrentFileInfo currentFile;
     };
 
-    // Функция для преобразования value в TorrentFile
+	string computeInfoHash(const TorrentFile& torrent);
+
+    // value to TorrentFile
     TorrentFile parseTorrentFile(const Value& data);
 
     Value toValue(const TorrentFile& torrent);

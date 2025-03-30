@@ -34,7 +34,7 @@ std::string Hash::createHash(const std::vector<std::string>& filePaths, size_t c
         std::ifstream file(filePath, std::ios::binary);
 
         if (!file)
-            throw std::runtime_error("Не удалось открыть файл: " + filePath);
+            throw std::runtime_error("Failed to open file : " + filePath);
 
 
         while (file) {

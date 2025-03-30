@@ -3,8 +3,6 @@
 
 #include "valueTypes.h"
 
-
-
 namespace bencode 
 {
 
@@ -14,35 +12,27 @@ namespace bencode
 	public:
 
 		friend struct Dt;
-		// Декодирование строки
 		static Value decode(const std::string& string);
 
 	private:
-		// первое число в строке
 		static std::string firstDigit(const std::string& str);
 
-		// Декодирования первого инта в строке
 		static std::pair<unsigned long long, int> decodeInt(const std::string& s);
 
-		// Декодирование первого стринга в строке
 		static std::pair<std::string, int> decodestring(const std::string& s);
 
-		// Декодирования листа
 		static std::pair<ValueVector, int> decodeList(const std::string& s);
 
-		// Декодирования словаря
 		static std::pair<ValueDictionary, int> decodeDict(const std::string& s);
 
-		// Декодирования всей строки рекурсией
 		static std::pair<Value, int> _decode(const std::string& s);
 	};
+
 	struct Dt
 	{
 		std::pair<ValueDictionary, int> decodeDc(const std::string& s);
 		Decoder decoder;
 	};
-
-
 }
 
 #endif

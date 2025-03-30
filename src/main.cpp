@@ -1,4 +1,4 @@
-﻿#include "ufo_torrent.h"
+#include "ufo_torrent.h"
 #include <iostream>
 #include <ncurses.h>
 #include <string>
@@ -16,6 +16,10 @@
 #include <filesystem>
 #include "ncurses_utils.h"
 #include "menu.h"
+#include <libtorrent/session.hpp>
+#include <libtorrent/torrent_info.hpp>
+#include <libtorrent/alert_types.hpp>
+#include <libtorrent/torrent_status.hpp>
 
 using namespace bencode;
 using namespace Torrent;
@@ -168,6 +172,7 @@ void redraw_interface(WINDOW* left_win, WINDOW* right_win, MENU* left_menu) {
 
 int main() {
     setlocale(LC_ALL, "");
+    session s;
     initscr();
     cbreak();
     noecho();
@@ -263,10 +268,40 @@ int main() {
                     delwin(fileWin);
                     delwin(truefileWin);
 
-                    if (!selectedFile.empty()) {
+                    if (!selectedFile.empty()) 
+                    {
                         TorrentFile file = parseTorrentFile(Decoder::decode(read(selectedFile)));
                         selectedTorrents.insert(selectedFile);
                         refresh_right_win(right_win);
+                        try 
+                        {
+                            // Загружаем информацию о торренте
+                            torrent_info info(selectedFile);
+
+                            // Создаем параметры для добавления торрента в сессию
+                            add_torrent_params p;
+                            p.ti = std::make_shared<torrent_info>(info);
+                            p.save_path = "./";  // Путь для сохранения скачанных файлов
+
+                            // Добавляем торрент в сессию
+                            torrent_handle h = s.add_torrent(p);
+
+                            std::cout << "Скачивание началось..." << std::endl;
+
+                            // Цикл обработки событий
+                            while (!h.status().is_seeding) 
+                            {
+                                s.post_torrent_updates();
+                                std::vector<alert*> alerts;
+                                s.pop_alerts(&alerts);
+
+                                // Получаем текущий прогресс
+                                torrent_status status = h.status();
+
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                            }
+
+                        }
                     }
                     redraw_interface(left_win, right_win, left_menu);
                     break;
