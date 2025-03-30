@@ -58,6 +58,8 @@ namespace Torrent {
         mutable TorrentFileInfo currentFile;
     };
 
+	string computeInfoHash(const TorrentFile& torrent);
+
     // value to TorrentFile
     TorrentFile parseTorrentFile(const Value& data);
 

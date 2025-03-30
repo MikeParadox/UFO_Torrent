@@ -1,6 +1,7 @@
 #include "../includes/torrentFile.h"
 #include "torrentFile.h"
 #include <filesystem>
+#include "encode.h"
 
 using std::string;
 using std::vector;
@@ -213,4 +214,57 @@ TorrentFile Torrent::createTorrentFile(const string& announce, const vector<vect
 	torrent.info.files = infoFiles;
 
 	return torrent;
+}
+
+std::string Torrent::computeInfoHash(const Torrent::TorrentFile& torrent) {
+	// Формируем Bencode-словарь из info-структуры
+	ValueDictionary infoDict;
+	infoDict["name"] = torrent.info.name;
+	// Приводим pieceLength к int, если это допустимо (иначе используйте другой тип)
+	infoDict["piece length"] = static_cast<int>(torrent.info.pieceLength);
+	infoDict["pieces"] = torrent.info.pieces;
+
+	if (torrent.info.files.size() == 1) {
+		// Однофайловый торрент
+		infoDict["length"] = static_cast<int>(torrent.info.files[0].length);
+	}
+	else {
+		// Многофайловый торрент
+		ValueVector filesList;
+		for (const auto& file : torrent.info.files) {
+			ValueDictionary fileDict;
+			fileDict["length"] = static_cast<int>(file.length);
+
+			// Преобразуем путь (vector<string>) в ValueVector
+			ValueVector pathVector;
+			for (const auto& pathPart : file.path) {
+				pathVector.push_back(pathPart);
+			}
+			fileDict["path"] = pathVector;
+
+			filesList.push_back(fileDict);
+		}
+		infoDict["files"] = filesList;
+	}
+
+	// Кодируем infoDict в Bencode
+	std::string infoEncoded = Encoder::encode(infoDict);
+
+	// Вычисляем SHA-1 хеш с помощью Boost
+	boost::uuids::detail::sha1 sha;
+	sha.process_bytes(infoEncoded.data(), infoEncoded.size());
+
+	boost::uuids::detail::sha1::digest_type digest;
+	sha.get_digest(digest);
+
+	// Собираем итоговую строку хеша (20 байт)
+	std::string hash;
+	for (int i = 0; i < 5; i++) { // 5 * 4 байта = 20 байт
+		uint32_t part = digest[i];
+		for (int j = 0; j < 4; j++) {
+			hash.push_back(static_cast<char>((part >> (24 - j * 8)) & 0xFF));
+		}
+	}
+
+	return hash;
 }
