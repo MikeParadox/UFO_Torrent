@@ -1,13 +1,24 @@
-#include "TorrentClient.h"
+﻿#include "TorrentClient.h"
 #include "PeerConnection.h"
 #include "PeerRetriever.h"
 #include "PieceManager.h"
 #include "TorrentFileParser.h"
+#include "torrentFile.h"
+#include "fileUtils.h"
+#include "decode.h"
 #include "bencoding.h"
+#include <libtorrent/torrent_info.hpp>
+#include <libtorrent/error_code.hpp>
+#include <libtorrent/sha1_hash.hpp>
 #include <iostream>
 #include <random>
 #include <thread>
+#include <algorithm>
 
+using namespace bencode;
+using namespace Torrent;
+using namespace File;
+using namespace Hash;
 
 #define PORT 8080
 #define PEER_QUERY_INTERVAL 60
@@ -35,65 +46,108 @@ TorrentClient::~TorrentClient() = default;
  * @param downloadPath: directory of the file when it is finished (i.e. the
  * destination directory).
  */
+
 void TorrentClient::downloadFile(const std::string& torrentFilePath,
-                                 const std::string& downloadDirectory)
+    const std::string& downloadDirectory)
 {
-    // Parse Torrent file
+    // Чтение torrent файла в строку
+    std::string torrentData = read(torrentFilePath);
+
+    // Парсинг torrent файла с использованием libtorrent
     std::cout << "Parsing Torrent file " + torrentFilePath + "..." << std::endl;
-    TorrentFileParser torrentFileParser(torrentFilePath);
-    std::string announceUrl = torrentFileParser.getAnnounce();
+    lt::error_code ec;
+    lt::torrent_info ti(torrentData.c_str(), static_cast<int>(torrentData.size()), ec);
+    if (ec) {
+        std::cerr << "Failed to parse torrent file: " << ec.message() << std::endl;
+        return;
+    }
 
-    long fileSize = torrentFileParser.getFileSize();
-    const std::string infoHash = torrentFileParser.getInfoHash();
+    // Получение info_hash из libtorrent правильным образом
+    lt::sha1_hash info_hash = ti.info_hash();
+    std::string infoHash(info_hash.data(), info_hash.size()); // Бинарный хеш для handshake
 
-    std::string filename = torrentFileParser.getFileName();
-    std::string downloadPath = downloadDirectory + filename;
-    PieceManager pieceManager(torrentFileParser, downloadPath, threadNum);
+    // URL-encoded хеш для трекера
+    std::string urlEncodedHash;
+    for (int i = 0; i < 20; ++i) {
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%%%02X", static_cast<unsigned char>(info_hash[i]));
+        urlEncodedHash += buf;
+    }
 
-    // Adds threads to the thread pool
-    for (int i = 0; i < threadNum; i++)
+    // Используем существующий парсер для остальных данных
+    Torrent::TorrentFile file = Torrent::parseTorrentFile(Decoder::decode(torrentData));
+    std::string announceUrl;
+
+    // 1. Проверяем основное поле announce
+    if (!file.announce.empty() &&
+        (file.announce.find("http://") == 0 || file.announce.find("https://") == 0))
     {
+        announceUrl = file.announce;
+    }
+    // 2. Если announce невалидный, ищем в announceList
+    else if (!file.announceList.empty())
+    {
+        for (const auto& tier : file.announceList) {
+            for (const auto& url : tier) {
+                if (url.find("http://") == 0 || url.find("https://") == 0) {
+                    announceUrl = url;
+                    break;
+                }
+            }
+            if (!announceUrl.empty()) break;
+        }
+    }
+
+    std::cout << "Announce URL: " << announceUrl << std::endl;
+    std::cout << "Info Hash: " << info_hash.to_string() << std::endl;
+
+    // Расчет общего размера файлов
+    long fileSize = ti.total_size(); // Используем libtorrent для получения размера
+
+    std::string filename = ti.name(); // Используем libtorrent для получения имени
+    std::string downloadPath = downloadDirectory + filename;
+
+    // Инициализация PieceManager с использованием libtorrent info_hash
+    PieceManager pieceManager(file, downloadPath, threadNum);
+
+    // Создание потоков
+    for (int i = 0; i < threadNum; i++) {
         PeerConnection connection(&queue, peerId, infoHash, &pieceManager);
         connections.push_back(std::make_unique<PeerConnection>(connection));
         std::thread thread(&PeerConnection::start, connection);
         threadPool.push_back(std::move(thread));
     }
 
+    // Остальной код без изменений
     auto lastPeerQuery = (time_t)(-1);
-
     std::cout << "Download initiated..." << std::endl;
 
-    while (true)
-    {
+    while (true) {
         if (pieceManager.isComplete()) break;
 
         time_t currentTime = std::time(nullptr);
         auto diff = std::difftime(currentTime, lastPeerQuery);
-        // Retrieve peers from the tracker after a certain time interval or
-        // whenever the queue is empty
-        if (lastPeerQuery == -1 || diff >= PEER_QUERY_INTERVAL || queue.empty())
-        {
-            PeerRetriever peerRetriever(peerId, announceUrl, infoHash, PORT,
-                                        fileSize);
-            std::vector<Peer*> peers =
-                peerRetriever.retrievePeers(pieceManager.bytesDownloaded());
+        if (lastPeerQuery == -1 || diff >= PEER_QUERY_INTERVAL || queue.empty()) {
+            PeerRetriever peerRetriever(peerId, announceUrl, urlEncodedHash, PORT, fileSize);
+            std::vector<Peer*> peers = peerRetriever.retrievePeers(pieceManager.bytesDownloaded());
             lastPeerQuery = currentTime;
-            if (!peers.empty())
-            {
+            if (!peers.empty()) {
                 queue.clear();
                 for (auto peer : peers) queue.push_back(peer);
             }
         }
+
+        // Отладочное сообщение для отслеживания прогресса
     }
 
     terminate();
 
-    if (pieceManager.isComplete())
-    {
+    if (pieceManager.isComplete()) {
         std::cout << "Download completed!" << std::endl;
         std::cout << "File downloaded to " << downloadPath << std::endl;
     }
 }
+
 
 /**
  * Terminates the download and cleans up all the resources

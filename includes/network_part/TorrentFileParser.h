@@ -8,6 +8,7 @@
 #include <vector>
 
 using byte = unsigned char;
+
 /**
  * A class that parses a given Torrent file. The result returned
  * by bencoding decoder is a pointer to a custom BItem object, which can be a
@@ -17,6 +18,7 @@ using byte = unsigned char;
  * of all dictionaries from the top level and returns the value of key, if it
  * exists.
  */
+
 class TorrentFileParser
 {
 private:
@@ -33,5 +35,4 @@ public:
     std::vector<std::string> splitPieceHashes() const;
 };
 
-
-#endif // BITTORRENTCLIENT_TORRENTFILEPARSER_H
+#endif // TORRENTFILEPARSER_H

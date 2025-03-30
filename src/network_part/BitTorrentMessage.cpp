@@ -1,7 +1,5 @@
 #include "BitTorrentMessage.h"
 
-#include <bitset>
-#include <iostream>
 #include <sstream>
 
 /**

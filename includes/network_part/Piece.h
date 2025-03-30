@@ -13,9 +13,6 @@
  * when sharing data between peers a smaller unit is used - this
  * smaller piece is refereed to as `Block` by the unofficial
  * specification.
- * The implementation is based on the Python code from the
- * following repository:
- * https://github.com/eliasson/pieces/
  */
 class Piece
 {
@@ -38,3 +35,4 @@ public:
 };
 
 #endif // PIECE_H
+

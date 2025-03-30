@@ -1,11 +1,9 @@
 #include "TorrentFileParser.h"
 #include "Decoder.h"
-#include "bencoding.h"
 #include "sha1.h"
+#include <bencoding.h>
 #include <cassert>
 #include <fstream>
-#include <iostream>
-#include <regex>
 #include <sha1.h>
 #include <stdexcept>
 
@@ -40,7 +38,6 @@ std::shared_ptr<bencoding::BItem> TorrentFileParser::get(std::string key) const
     std::shared_ptr<bencoding::BItem> value = root->getValue(key);
     return value;
 }
-
 
 /**
  * Returns the info hash of the Torrent file as a string.
@@ -134,3 +131,4 @@ std::string TorrentFileParser::getAnnounce() const
         std::dynamic_pointer_cast<bencoding::BString>(announceItem)->value();
     return announce;
 }
+

@@ -3,32 +3,36 @@
 
 #include "valueTypes.h"
 
-namespace bencode
+namespace bencode 
 {
 
-class Decoder
-{
-public:
-    static Value decode(const std::string& string);
+	class Decoder
+	{
 
-private:
-    static std::string firstDigit(const std::string& str);
+	public:
 
+		friend struct Dt;
+		static Value decode(const std::string& string);
 
-    static std::pair<long long, int> decodeInt(const std::string& s);
+	private:
+		static std::string firstDigit(const std::string& str);
 
+		static std::pair<unsigned long long, int> decodeInt(const std::string& s);
 
-    static std::pair<std::string, int> decodeString(const std::string& s);
+		static std::pair<std::string, int> decodestring(const std::string& s);
 
+		static std::pair<ValueVector, int> decodeList(const std::string& s);
 
-    static std::pair<ValueVector, int> decodeList(const std::string& s);
+		static std::pair<ValueDictionary, int> decodeDict(const std::string& s);
 
+		static std::pair<Value, int> _decode(const std::string& s);
+	};
 
-    static std::pair<ValueDictionary, int> decodeDict(const std::string& s);
-
-
-    static std::pair<Value, int> _decode(const std::string& s);
-};
-} // namespace bencode
+	struct Dt
+	{
+		std::pair<ValueDictionary, int> decodeDc(const std::string& s);
+		Decoder decoder;
+	};
+}
 
 #endif

@@ -1,22 +1,22 @@
-#include "PeerConnection.h"
+﻿#include "PeerConnection.h"
 #include "connect.h"
 #include "utils.h"
 #include <cassert>
-#include <chrono>
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <netinet/in.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
 #include <utility>
 
 
-constexpr int info_hash_starting_pos{28};
-constexpr int peer_id_starting_pos{48};
-constexpr int hash_len{20};
-std::string dummy_peer_ip{"0.0.0.0"};
+constexpr int info_hash_starting_pos{ 28 };
+constexpr int peer_id_starting_pos{ 48 };
+constexpr int hash_len{ 20 };
+
+std::string dummy_peer_ip{ "0.0.0.0" };
 
 /**
  * Constructor of the class PeerConnection.
@@ -27,10 +27,10 @@ std::string dummy_peer_ip{"0.0.0.0"};
  * @param pieceManager: pointer to the PieceManager.
  */
 PeerConnection::PeerConnection(SharedQueue<Peer*>* queue, std::string clientId,
-                               std::string infoHash,
-                               PieceManager* piece_manager)
+    std::string infoHash,
+    PieceManager* piece_manager)
     : _queue(queue), clientId(std::move(clientId)),
-      infoHash(std::move(infoHash)), _piece_manager(piece_manager)
+    infoHash(std::move(infoHash)), _piece_manager(piece_manager)
 {
 }
 
@@ -66,31 +66,57 @@ void PeerConnection::start()
                             "Received invalid message Id from peer " + peerId);
                     switch (message.message_id())
                     {
-                    case choke: choked = true; break;
+                    case choke:
+                        std::cout << "Received choke message from peer "
+                            << peer->ip << std::endl;
+                        choked = true;
+                        break;
 
-                    case unchoke: choked = false; break;
+                    case unchoke:
+                        std::cout << "Received unchoke message from peer "
+                            << peer->ip << std::endl;
+                        choked = false;
+                        break;
 
                     case piece:
                     {
+                        std::cout << "Received piece from peer " << peer->ip
+                            << std::endl;
                         requestPending = false;
                         std::string payload = message.payload();
                         int index = bytesToInt(payload.substr(0, 4));
                         int begin = bytesToInt(payload.substr(4, 4));
                         std::string blockData = payload.substr(8);
                         _piece_manager->blockReceived(peerId, index, begin,
-                                                      blockData);
+                            blockData);
                         break;
                     }
+
                     case have:
                     {
+                        std::cout << "Received have message from peer "
+                            << peer->ip << std::endl;
                         std::string payload = message.payload();
                         int pieceIndex = bytesToInt(payload);
                         _piece_manager->updatePeer(peerId, pieceIndex);
                         break;
                     }
 
-                    default: break;
+                    case bitField:
+                    {
+                        std::cout << "Received bitfield from peer " << peer->ip
+                            << std::endl;
+                        std::string payload = message.payload();
+                        _piece_manager->addPeer(peerId, payload);
+                        break;
                     }
+
+                    default:
+                        std::cerr << "Received unknown message ID: "
+                            << (int)message.message_id() << std::endl;
+                        break;
+                    }
+
                     if (!choked)
                     {
                         if (!requestPending) { requestPiece(); }
@@ -122,35 +148,37 @@ void PeerConnection::stop()
  */
 void PeerConnection::performHandshake()
 {
-    // Connects to the peer
     try
     {
         sock = createConnection(peer->ip, peer->port);
     }
     catch (std::runtime_error& e)
     {
-        throw std::runtime_error("Cannot connect to peer [" + peer->ip + "]");
+        throw std::runtime_error("Cannot connect to peer [" + peer->ip + ":" +
+            std::to_string(peer->port) + "]: " + e.what());
     }
 
-    // Send the handshake message to the peer
     std::string handshakeMessage = createHandshakeMessage();
     sendData(sock, handshakeMessage);
 
-    // Receive the reply from the peer
-    std::string reply = receiveData(sock, handshakeMessage.length());
-    if (reply.empty())
-        throw std::runtime_error(
-            "Receive handshake from peer: FAILED [No response from peer]");
-    peerId = reply.substr(info_hash_starting_pos, hash_len);
+    // Handshake response ����� ������������� ������ 68 ����
+    std::string reply = receiveData(sock, 68);
 
-    // Compare the info hash from the peer's reply message with the info hash we
-    // sent. If the two values are not the same, close the connection and raise
-    // an exception.
+    if (reply.empty()) { throw std::runtime_error("No response from peer"); }
+
+    if (reply.length() < 48)
+    {
+        throw std::runtime_error("Invalid handshake response length");
+    }
+
+    peerId = reply.substr(peer_id_starting_pos, hash_len);
     std::string receivedInfoHash =
         reply.substr(info_hash_starting_pos, hash_len);
-    if ((receivedInfoHash == infoHash) != 0)
-        throw std::runtime_error("Perform handshake with peer " + peer->ip +
-                                 ": FAILED [Received mismatching info hash]");
+
+    if (receivedInfoHash != infoHash)
+    {
+        throw std::runtime_error("Mismatching info hash");
+    }
 }
 
 /**
@@ -158,16 +186,17 @@ void PeerConnection::performHandshake()
  */
 void PeerConnection::receiveBitField()
 {
-    // Receive BitField from the peer
     BitTorrentMessage message = receiveMessage();
     if (message.message_id() != bitField)
         throw std::runtime_error(
             "Receive BitField from peer: FAILED [Wrong message ID]");
-    peerBitField = message.payload();
 
-    // Informs the PieceManager of the BitField received
+    peerBitField = message.payload();
+    std::cout << "Received BitField from peer " << peer->ip << std::endl;
+
     _piece_manager->addPeer(peerId, peerBitField);
 }
+
 
 /**
  * Sends a request message to the peer for the next block
@@ -217,12 +246,14 @@ void PeerConnection::sendInterested()
  */
 void PeerConnection::receiveUnchoke()
 {
+    // �������� ��������� Unchoke �� ����
     BitTorrentMessage message = receiveMessage();
     if (message.message_id() != unchoke)
         throw std::runtime_error(
             "Receive Unchoke message from peer: FAILED [Wrong message ID: " +
             std::to_string(message.message_id()) + "]");
     choked = false;
+    std::cout << "Peer " << peer->ip << " is Unchoked" << std::endl;
 }
 
 /**
@@ -246,14 +277,24 @@ bool PeerConnection::establishNewConnection()
 {
     try
     {
+        std::cout << "Attempting to perform handshake with peer " << peer->ip << ":" << peer->port << std::endl;
         performHandshake();
+
+        std::cout << "Attempting to receive BitField from peer " << peer->ip
+            << std::endl;
         receiveBitField();
+
+        std::cout << "Sending interested message to peer " << peer->ip
+            << std::endl;
         sendInterested();
+
         return true;
     }
-    catch (const std::runtime_error& e)
+    catch (const std::exception& e)
     {
-        return false;
+        std::cerr << "Error while establishing connection with peer "
+            << peer->ip << ":" << peer->port << e.what() << std::endl;
+        return false; // ���������� false, ���� ���-�� ����� �� ���.
     }
 }
 
@@ -279,8 +320,12 @@ std::string PeerConnection::createHandshakeMessage()
     std::string reserved;
     for (int i = 0; i < 8; i++) reserved.push_back('\0');
     buffer << reserved;
-    buffer << hexDecode(infoHash);
+    buffer << infoHash;
     buffer << clientId;
+
+    std::cout << "Sending handshake to " << peer->ip << ":" << peer->port
+        << std::endl;
+
     assert(buffer.str().length() == protocol.length() + 49);
     return buffer.str();
 }

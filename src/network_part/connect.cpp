@@ -1,10 +1,10 @@
 #include "connect.h"
+#include "iostream"
 #include "utils.h"
 #include <arpa/inet.h>
 #include <chrono>
 #include <cstring>
 #include <fcntl.h>
-#include <iostream>
 #include <limits>
 #include <netinet/in.h>
 #include <stdexcept>
@@ -12,56 +12,43 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-constexpr int connection_timeout{3};
-constexpr int read_timeout{3000};
+constexpr int connection_timeout{ 10 }; // ���� 3
+constexpr int read_timeout{ 10000 };
 
-/**
- * Sets the given socket to either blocking or non-blocking mode.
- * @param sock: the socket to block or unblock.
- * @param blocking: if true, the given socket will be set to blocking mode.
- * If false, the socket will be set to non-blocking mode.
- * @return true on success, false if an error occurs.
- */
+// Устанавливаем сокет в блокирующий/неблокирующий режим
 bool setSocketBlocking(int sock, bool blocking)
 {
     if (sock < 0) return false;
 
     int flags = fcntl(sock, F_GETFL, 0);
     if (flags == -1) return false;
+
     flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
     return (fcntl(sock, F_SETFL, flags) == 0);
 }
 
-
-/**
- * Starts a TCP connection with the given IP address and port number. Returns
- * the socket of the connection if successful.
- * @param ip: IP address of the host.
- * @param port: port number of the host.
- * @return socket number of the created connection.
- */
+// Создает соединение по TCP
 int createConnection(const std::string& ip, const int port)
 {
     int sock = 0;
     struct sockaddr_in address;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        throw std::runtime_error("Socket creation error: " +
-                                 std::to_string(sock));
+        throw std::runtime_error("Socket creation error: " + std::to_string(sock));
 
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
 
-    char* tempIp{new char[ip.length() + 1]};
+    char* tempIp{ new char[ip.length() + 1] };
     strcpy(tempIp, ip.c_str());
 
-    // Converts IP address from string to struct in_addr
+    // Преобразуем IP-адрес из строки
     if (inet_pton(AF_INET, tempIp, &address.sin_addr) <= 0)
         throw std::runtime_error("Invalid IP address: " + ip);
 
-    // Sets socket to non-block mode
+    // Ставим сокет в неблокирующий режим для connect
     if (!setSocketBlocking(sock, false))
-        throw std::runtime_error("An error occurred when setting socket " +
-                                 std::to_string(sock) + "to NONBLOCK");
+        throw std::runtime_error("An error occurred when setting socket "
+            + std::to_string(sock) + " to NONBLOCK");
 
     connect(sock, (struct sockaddr*)&address, sizeof(address));
 
@@ -72,121 +59,92 @@ int createConnection(const std::string& ip, const int port)
     tv.tv_sec = connection_timeout;
     tv.tv_usec = 0;
 
+    // Ожидаем, пока connect завершится
     if (select(sock + 1, NULL, &fdset, NULL, &tv) == 1)
     {
         int so_error;
-        socklen_t len{sizeof so_error};
-
+        socklen_t len{ sizeof so_error };
         getsockopt(sock, SOL_SOCKET, SO_ERROR, &so_error, &len);
 
         if (so_error == 0)
         {
-            // Sets socket to blocking mode
+            // Переключаемся обратно в блокирующий режим
             if (!setSocketBlocking(sock, true))
-                throw std::runtime_error(
-                    "An error occurred when setting socket " +
-                    std::to_string(sock) + "to BLOCK");
+                throw std::runtime_error("An error occurred when setting socket "
+                    + std::to_string(sock) + " to BLOCK");
             return sock;
         }
     }
+
     close(sock);
-    throw std::runtime_error("Connect to " + ip +
-                             ": FAILED [Connection timeout]");
+    throw std::runtime_error("Connect to " + ip + ":" + std::to_string(port)
+        + ": FAILED [Connection timeout]");
 }
 
-
-/**
- * Writes data to the given socket.
- * @param sock: socket number.
- * @param data: data to be written (sent) to the socket.
- */
+// Отправка данных пиру
 void sendData(const int sock, const std::string& data)
 {
-    auto n{data.length()};
-    char buffer[n];
-    for (int i = 0; i < n; i++) buffer[i] = data[i];
-
-    int res = send(sock, buffer, n, 0);
+    auto n = data.length();
+    if (n == 0) return;
+    int res = send(sock, data.data(), n, 0);
     if (res < 0)
-        throw std::runtime_error("Failed to write data to socket " +
-                                 std::to_string(sock));
+        throw std::runtime_error("Failed to write data to socket "
+            + std::to_string(sock));
 }
 
-/**
- * Receives data from the connected host. If the bufferSize argument is None,
- * the first 4 bytes of the received message will be read and interpreted as an
- * integer that specifies the total length of the message.
- * @param sock: socket number that specifies the connection to the host.
- * @param bufferSize: size of the receiving buffer.
- * @return received data in the form a string.
- */
-std::string receiveData(const int sock, uint32_t bufferSize)
+// Корректное чтение данных BitTorrent-сообщений
+std::string receiveData(int sock, int expected_size)
 {
-
-    std::string reply;
-
-    // If buffer size is not specified, read the first 4 bytes of the message
-    // to obtain the total length of the response.
-    if (!bufferSize)
-    {
-        struct pollfd fd;
-        int ret;
-        fd.fd = sock;
-        fd.events = POLLIN;
-        ret = poll(&fd, 1, read_timeout);
-
-        long bytesRead;
-        const int lengthIndicatorSize = 4;
-        char buffer[lengthIndicatorSize];
-        switch (ret)
-        {
-        case -1:
-            throw std::runtime_error("Read failed from socket " +
-                                     std::to_string(sock));
-        case 0:
-            throw std::runtime_error("Read timeout from socket " +
-                                     std::to_string(sock));
-        default: bytesRead = recv(sock, buffer, sizeof(buffer), 0);
-        }
-        if (bytesRead != lengthIndicatorSize) return reply;
-
-        std::string messageLengthStr;
-        for (char i : buffer) messageLengthStr += i;
-        uint32_t messageLength = bytesToInt(messageLengthStr);
-        bufferSize = messageLength;
+    if (sock <= 0) {
+        throw std::runtime_error("Invalid socket");
     }
 
-    // If the buffer size is greater than uint16_t max, a segfault will
-    // occur when initializing the buffer
-    if (bufferSize > std::numeric_limits<uint16_t>::max())
-        throw std::runtime_error("Received corrupted data [Received buffer "
-                                 "size greater than 2 ^ 16 - 1]");
+    // Если размер не задан явно, значит сначала берем префикс длины
+    if (expected_size == 0) {
+        uint32_t length_prefix = 0;
+        ssize_t bytes_received = recv(sock, &length_prefix, 4, 0);
 
-    char buffer[bufferSize];
-    // memset(buffer, 0, bufferSize);
-    // Receives reply from the host
-    // Keeps reading from the buffer until all expected bytes are received
-    long bytesRead{0};
-    long bytesToRead{bufferSize};
-    // If not all expected bytes are received within the period of time
-    // specified by READ_TIMEOUT, the read process will stop.
-    auto startTime = std::chrono::steady_clock::now();
-    do {
-        auto diff = std::chrono::steady_clock::now() - startTime;
-        if (std::chrono::duration<double, std::milli>(diff).count() >
-            read_timeout)
-        {
-            throw std::runtime_error("Read timeout from socket " +
-                                     std::to_string(sock));
+        if (bytes_received <= 0) {
+            if (bytes_received == 0) {
+                throw std::runtime_error("Connection closed by peer");
+            }
+            else {
+                throw std::runtime_error("Failed to receive data: "
+                    + std::string(strerror(errno)));
+            }
         }
-        bytesRead = recv(sock, buffer, bufferSize, 0);
 
-        if (bytesRead <= 0)
-            throw std::runtime_error("Failed to receive data from socket " +
-                                     std::to_string(sock));
-        bytesToRead -= bytesRead;
-        for (int i = 0; i < bytesRead; i++) reply.push_back(buffer[i]);
-    } while (bytesToRead > 0);
+        if (bytes_received < 4) {
+            throw std::runtime_error("Incomplete length prefix received");
+        }
 
-    return reply;
+        length_prefix = ntohl(length_prefix); // big-endian -> host order
+
+        // Если ноль, то это keep-alive
+        if (length_prefix == 0) {
+            return "";
+        }
+        expected_size = length_prefix;
+    }
+
+    std::vector<char> buffer(expected_size);
+    ssize_t total_bytes = 0;
+
+    // Считываем весь ожидаемый объем данных по частям
+    while (total_bytes < expected_size) {
+        ssize_t bytes = recv(sock, buffer.data() + total_bytes,
+            expected_size - total_bytes, 0);
+        if (bytes <= 0) {
+            if (bytes == 0) {
+                throw std::runtime_error("Connection closed by peer during message receive");
+            }
+            else {
+                throw std::runtime_error("Error receiving data: " + std::string(strerror(errno)));
+            }
+        }
+        total_bytes += bytes;
+    }
+
+    // Превращаем полученный буфер в std::string
+    return std::string(buffer.data(), buffer.size());
 }

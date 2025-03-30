@@ -12,9 +12,9 @@ class PeerConnection
 {
 private:
     int sock{};
-    bool choked{true};
-    bool terminated{false};
-    bool requestPending = {false};
+    bool choked{ true };
+    bool terminated{ false };
+    bool requestPending = { false };
     const std::string clientId;
     const std::string infoHash;
     SharedQueue<Peer*>* _queue;
@@ -37,7 +37,7 @@ public:
     const std::string& getPeerId() const;
 
     explicit PeerConnection(SharedQueue<Peer*>* queue, std::string clientId,
-                            std::string infoHash, PieceManager* piece_manager);
+        std::string infoHash, PieceManager* piece_manager);
     ~PeerConnection();
     void start();
     void stop();
