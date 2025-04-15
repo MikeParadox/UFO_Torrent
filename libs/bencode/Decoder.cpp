@@ -204,7 +204,7 @@ std::string Decoder::readEncodedInteger(std::istream &input) const {
 std::unique_ptr<BInteger> Decoder::decodeEncodedInteger(
 		const std::string &encodedInteger) const {
 	// See the description of decodeInteger() for the format and example.
-	std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");
+	static cosnt std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");//ץח םא סאלמל הוכו
 	std::smatch match;
 	bool valid = std::regex_match(encodedInteger, match, integerRegex);
 	if (!valid) {
