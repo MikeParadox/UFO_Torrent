@@ -37,4 +37,12 @@ TEST(EncoderTest, EncodeList) {
     EXPECT_EQ(bencoding::encode(list), "li42e3:fooe");
 }
 
+TEST(EncoderTest, EncodeDictionary) {
+    // Dictionary
+    auto dict = bencoding::BDictionary::create();
+    (*dict)[bencoding::BString::create("foo")] = bencoding::BString::create("bar");
+    (*dict)[bencoding::BString::create("num")] = bencoding::BInteger::create(42);
+
+    EXPECT_EQ(bencoding::encode(dict), "d3:foo3:bar3:numi42ee");
+}
 
