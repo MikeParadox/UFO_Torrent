@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "../src/Decoder.h"
 
-namespace bencoding;  // Замените на реальное пространство имён
+namespace bencoding;  
 
 TEST(DecoderTest, Integers) {
     auto decoder = bencoding::Decoder::create();
@@ -12,8 +12,7 @@ TEST(DecoderTest, Integers) {
 
     // Invalid integers
     EXPECT_THROW(decoder->decode("i04e"), bencoding::DecodingError);  // 0
-    EXPECT_THROW(decoder->decode("ie"), bencoding::DecodingError);   // пустая строка
-}
+    EXPECT_THROW(decoder->decode("ie"), bencoding::DecodingError);   // null line
 
 TEST(DecoderTest, DictionarySorting) {
     auto decoder = bencoding::Decoder::create();
