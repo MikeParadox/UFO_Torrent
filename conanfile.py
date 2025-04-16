@@ -6,12 +6,24 @@ class ExampleRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps", "CMakeToolchain"
 
+    default_options = {
+    "libtorrent/*:shared": False,
+    "boost/*:shared": False,
+    "openssl/*:shared": False,  # Required for libtorrent
+    "zlib/*:shared": False,     # Often needed by libcurl/OpenSSL
+    "libcurl/*:shared": False,  # If using libcurl
+    "ncurses/*:shared": False,  # If using ncurses
+    # Add other deps here
+}
+
     def requirements(self):
         self.requires("libtorrent/2.0.10")
         self.requires("gtest/1.15.0")
         self.requires("ncurses/6.5")
         self.requires("libcurl/8.10.1")
-        self.requires("boost/1.81.0")
+        self.requires("boost/1.83.0",override=True)
+
+   
 
     def layout(self):
         cmake_layout(self)
