@@ -204,7 +204,7 @@ std::string Decoder::readEncodedInteger(std::istream &input) const {
 std::unique_ptr<BInteger> Decoder::decodeEncodedInteger(
 		const std::string &encodedInteger) const {
 	// See the description of decodeInteger() for the format and example.
-	std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");
+	static cosnt std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");//ץח םא סאלמל הוכו
 	std::smatch match;
 	bool valid = std::regex_match(encodedInteger, match, integerRegex);
 	if (!valid) {
@@ -292,18 +292,17 @@ std::string::size_type Decoder::readStringLength(std::istream &input) const {
 /**
 * @brief Reads a string of the given @a length from @a input and returns it.
 */
-std::string Decoder::readStringOfGivenLength(std::istream &input,
-		std::string::size_type length) const {
-	std::string str(length, char());
+std::string Decoder::readStringOfGivenLength(std::istream& input,
+	std::string::size_type length) const {
+	std::string str;
+	str.resize(length);
 	input.read(&str[0], length);
-	std::string::size_type numOfReadChars(input.gcount());
-	if (numOfReadChars != length) {
-		throw DecodingError("expected a string containing " + std::to_string(length) +
-			" characters, but read only " + std::to_string(numOfReadChars) +
-			" characters");
+	if (input.gcount() != static_cast<std::streamsize>(length)) {
+		throw DecodingError("expected " + std::to_string(length) +
+			" characters, got " + std::to_string(input.gcount()));
 	}
 	return str;
-}
+}}
 
 /**
 * @brief Throws DecodingError if @a input has not been completely read.
