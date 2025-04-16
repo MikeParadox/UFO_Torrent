@@ -1,25 +1,37 @@
 #include <gtest/gtest.h>
 #include "../src/Decoder.h"
 
-namespace bencoding;  
+#include <gtest/gtest.h>
+#include "../src/Decoder.h"
 
-TEST(DecoderTest, Integers) {
-    auto decoder = bencoding::Decoder::create();
+namespace bencoding {
 
-    // Valid integers
-    EXPECT_EQ(decoder->decode("i42e")->as<bencoding::BInteger>()->value(), 42);
-    EXPECT_EQ(decoder->decode("i-10e")->as<bencoding::BInteger>()->value(), -10);
+    class DecoderTest : public ::testing::Test {
+    protected:
+        std::unique_ptr<Decoder> decoder;
 
-    // Invalid integers
-    EXPECT_THROW(decoder->decode("i04e"), bencoding::DecodingError);  // 0
-    EXPECT_THROW(decoder->decode("ie"), bencoding::DecodingError);   // null line
+        void SetUp() override {
+            decoder = Decoder::create();
+        }
+    };
 
-TEST(DecoderTest, DictionarySorting) {
-    auto decoder = bencoding::Decoder::create();
+    TEST_F(DecoderTest, Integers) {
+        // Valid integers
+        EXPECT_EQ(decoder->decode("i42e")->as<BInteger>()->value(), 42);
+        EXPECT_EQ(decoder->decode("i-10e")->as<BInteger>()->value(), -10);
 
-    // Valid (sorted keys)
-    EXPECT_NO_THROW(decoder->decode("d1:a1:b2:aa1:ce"));
+        // Invalid integers
+        EXPECT_THROW(decoder->decode("i04e"), DecodingError);  // Leading zero not allowed
+        EXPECT_THROW(decoder->decode("ie"), DecodingError);    // Empty integer
+        EXPECT_THROW(decoder->decode("i-0e"), DecodingError); // Negative zero
+    }
 
-    // Invalid (unsorted keys)
-    EXPECT_THROW(decoder->decode("d2:aa1:c1:a1:be"), bencoding::DecodingError);
+    TEST_F(DecoderTest, DictionarySorting) {
+        // Valid (sorted keys)
+        EXPECT_NO_THROW(decoder->decode("d1:a1:b2:aa1:ce"));
+
+        // Invalid (unsorted keys)
+        EXPECT_THROW(decoder->decode("d2:aa1:c1:a1:be"), DecodingError);
+    }
+
 }
