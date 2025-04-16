@@ -204,7 +204,7 @@ std::string Decoder::readEncodedInteger(std::istream &input) const {
 std::unique_ptr<BInteger> Decoder::decodeEncodedInteger(
 		const std::string &encodedInteger) const {
 	// See the description of decodeInteger() for the format and example.
-	static cosnt std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");//хз на самом деле
+	static const std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");//пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	std::smatch match;
 	bool valid = std::regex_match(encodedInteger, match, integerRegex);
 	if (!valid) {
@@ -307,7 +307,7 @@ std::string Decoder::readStringOfGivenLength(std::istream& input,
 /**
 * @brief Throws DecodingError if @a input has not been completely read.
 */
-void Decoder::validateInputDoesNotContainUndecodedCharacters(std::istream &input) {
+void bencoding::Decoder::validateInputDoesNotContainUndecodedCharacters(std::istream &input) {
 	if (input.peek() != std::char_traits<char>::eof()) {
 		throw DecodingError("input contains undecoded characters");
 	}
@@ -321,8 +321,8 @@ void Decoder::validateInputDoesNotContainUndecodedCharacters(std::istream &input
 *
 * See Decoder::decode() for more details.
 */
-std::unique_ptr<BItem> decode(const std::string &data) {
-	auto decoder = Decoder::create();
+std::unique_ptr<bencoding::BItem> decode(const std::string &data) {
+	auto decoder = bencoding::Decoder::create();
 	return decoder->decode(data);
 }
 
@@ -335,9 +335,7 @@ std::unique_ptr<BItem> decode(const std::string &data) {
 *
 * See Decoder::decode() for more details.
 */
-std::unique_ptr<BItem> decode(std::istream &input) {
-	auto decoder = Decoder::create();
+std::unique_ptr<bencoding::BItem> decode(std::istream &input) {
+	auto decoder = bencoding::Decoder::create();
 	return decoder->decode(input);
-}
-
 } // namespace bencoding
