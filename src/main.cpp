@@ -1,4 +1,4 @@
-﻿#include "ufo_torrent.h"
+#include "ufo_torrent.h"
 #include <iostream>
 #include <ncurses.h>
 #include <string>
@@ -15,7 +15,6 @@
 #include <boost/locale.hpp>
 #include <filesystem>
 #include "ncurses_utils.h"
-#include "menu.h"
 
 using namespace bencode;
 using namespace Torrent;
@@ -27,6 +26,8 @@ namespace fs = std::filesystem;
 std::set<std::string> selectedTorrents;
 std::set<TorrentFile> actualyTorrent;
 int right_win_selected = 0;  // Track selected item in right window
+int left_win_selected = 0;   // Track selected item in left window
+const char* left_choices[] = { "Add Torrent", "Exit" };
 
 std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
     std::string currentDir = startDir;
@@ -157,16 +158,28 @@ void refresh_right_win(WINDOW* right_win) {
     wrefresh(right_win);
 }
 
-void redraw_interface(WINDOW* left_win, WINDOW* right_win, MENU* left_menu) {
+void refresh_left_win(WINDOW* left_win) {
+    werase(left_win);
+    box(left_win, 0, 0);
+    mvwprintw(left_win, 1, 2, "Main Menu");
+
+    for (int i = 0; i < 2; ++i) {
+        if (i == left_win_selected) {
+            wattron(left_win, A_REVERSE);
+        }
+        mvwprintw(left_win, i + 3, 2, "%s", left_choices[i]);
+        if (i == left_win_selected) {
+            wattroff(left_win, A_REVERSE);
+        }
+    }
+    wrefresh(left_win);
+}
+
+void redraw_interface(WINDOW* left_win, WINDOW* right_win) {
     refresh();
     clear();
-    box(left_win, 0, 0);
-    box(right_win, 0, 0);
-    mvwprintw(left_win, 1, 2, "Main Menu");
-    post_menu(left_menu);
+    refresh_left_win(left_win);
     refresh_right_win(right_win);
-    wrefresh(left_win);
-    wrefresh(right_win);
 }
 
 int main() {
@@ -176,39 +189,16 @@ int main() {
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
-    start_color();
-
-    init_pair(1, COLOR_WHITE, COLOR_BLUE);
-    init_pair(2, COLOR_WHITE, COLOR_BLACK);
-
-    const char* left_choices[] = {
-        "Add Torrent",
-        "Exit",
-        nullptr
-    };
-
-    ITEM** left_items = new ITEM * [4];
-    for (int i = 0; i < 4; ++i) {
-        left_items[i] = new_item(left_choices[i], "");
-    }
-    left_items[4] = nullptr;
-
-    MENU* left_menu = new_menu(left_items);
 
     WINDOW* left_win = newwin(10, 30, 2, 2);
     WINDOW* right_win = newwin(10, 30, 2, 34);
     keypad(left_win, TRUE);
     keypad(right_win, TRUE);
 
-    set_menu_win(left_menu, left_win);
-    set_menu_sub(left_menu, derwin(left_win, 6, 28, 3, 1));
-    set_menu_mark(left_menu, " * ");
-    set_menu_fore(left_menu, COLOR_PAIR(1));
-
-    post_menu(left_menu);
+    refresh_left_win(left_win);
     refresh_right_win(right_win);
 
-    redraw_interface(left_win, right_win, left_menu);
+    redraw_interface(left_win, right_win);
 
     WINDOW* active_win = left_win;
     bool in_right_pane = false;
@@ -222,7 +212,8 @@ int main() {
                 refresh_right_win(right_win);
             }
             else if (!in_right_pane) {
-                menu_driver(left_menu, REQ_DOWN_ITEM);
+                left_win_selected = std::min(left_win_selected + 1, 1);
+                refresh_left_win(left_win);
             }
             break;
         case KEY_UP:
@@ -231,31 +222,30 @@ int main() {
                 refresh_right_win(right_win);
             }
             else if (!in_right_pane) {
-                menu_driver(left_menu, REQ_UP_ITEM);
+                left_win_selected = std::max(left_win_selected - 1, 0);
+                refresh_left_win(left_win);
             }
             break;
         case KEY_LEFT:
             active_win = left_win;
             in_right_pane = false;
+            refresh_left_win(left_win);
             break;
         case KEY_RIGHT:
             if (!selectedTorrents.empty()) {
                 active_win = right_win;
                 in_right_pane = true;
+                refresh_right_win(right_win);
             }
             break;
         case 10: // Enter key
         {
-
-            if (in_right_pane && !selectedTorrents.empty()) 
+            if (in_right_pane && !selectedTorrents.empty())
             {
-                
+                // Handle right pane selection
             }
             else if (!in_right_pane) {
-                ITEM* cur_item = current_item(left_menu);
-                int choice = item_index(cur_item);
-
-                switch (choice) {
+                switch (left_win_selected) {
                 case 0: // Add Torrent
                 {
                     WINDOW* fileWin = newwin(14, 50, 5, 10);
@@ -272,7 +262,7 @@ int main() {
                         selectedTorrents.insert(selectedFile);
                         refresh_right_win(right_win);
                     }
-                    redraw_interface(left_win, right_win, left_menu);
+                    redraw_interface(left_win, right_win);
                     break;
                 }
                 case 1: // Exit
@@ -287,12 +277,6 @@ int main() {
     }
 
 exit:
-    unpost_menu(left_menu);
-    free_menu(left_menu);
-    for (int i = 0; i < 4; ++i) {
-        free_item(left_items[i]);
-    }
-    delete[] left_items;
     delwin(left_win);
     delwin(right_win);
     endwin();

@@ -5,8 +5,6 @@
 
 #include <boost/variant/apply_visitor.hpp>
 
-// Вывод Value для удобства
-
 namespace bencode {
 
     class PrettyPrinter : public boost::static_visitor<>

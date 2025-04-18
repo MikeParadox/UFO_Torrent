@@ -1,48 +1,72 @@
-﻿# CMakeList.txt: проект CMake для ufo_torrent; включите исходный код и определения,
-# укажите здесь логику для конкретного проекта.
-#
+﻿
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+set(Boost_USE_STATIC_LIBS ON)
 
-# Добавьте источник в исполняемый файл этого проекта.
+find_package(LibtorrentRasterbar REQUIRED)
+include_directories(${LibtorrentRasterbar_INCLUDE_DIRS})
 
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INDLUDE_DIRS})
 
 find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS}) 
+include_directories(${Boost_INCLUDE_DIRS})
 
-add_library(Testing ../includes/ufo_torrent.h ufo_torrent.cpp ./models/torrentFile.cpp
-                      ./bencode/decode.cpp
-                      ./bencode/prettyPrinter.cpp
-                      ./bencode/encode.cpp
-                      ./bencode/prettyPrinter.cpp 
-                      "ncurses_utils.cpp"
-                      ./bencode/encode.cpp
-                      ./hashing/createHash.cpp
-                      ./utils/fileUtils.cpp)
-
-add_executable(${PROJECT_NAME} main.cpp)
-
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.45.0 COMPONENTS *boost libraries here*) 
-
-# if(Boost_FOUND)
-#     add_executable(progname file1.cxx file2.cxx) 
-#     target_link_libraries(progname ${Boost_LIBRARIES})
-# endif()
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-  Testing
-  ${CURSES_LIBRARIES}
-  ${Boost_LIBRARIES}
+add_library(Testing STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
+        ./bencode/decode.cpp
+        ./bencode/prettyPrinter.cpp
+        ./bencode/encode.cpp
+        ./hashing/createHash.cpp
+        ./utils/fileUtils.cpp
+        ./models/torrentFile.cpp
+        ./network_part/BitTorrentMessage.cpp
+        ./network_part/connect.cpp
+        ./network_part/PeerConnection.cpp
+        ./network_part/PeerRetriever.cpp
+        ./network_part/Piece.cpp
+        ./network_part/PieceManager.cpp
+        ./network_part/TorrentClient.cpp
+        ./network_part/TorrentFileParser.cpp
+        ./network_part/utils.cpp
+        ../libs/bencode/Utils.cpp
+        ../libs/bencode/Decoder.cpp
+        ../libs/bencode/Encoder.cpp
+        ../libs/bencode/BItemVisitor.cpp
+        ../libs/bencode/BItem.cpp
+        ../libs/bencode/BInteger.cpp
+        ../libs/bencode/Decoder.cpp
+        ../libs/bencode/BString.cpp
+        ../libs/bencode/BDictionary.cpp
+        ../libs/bencode/BList.cpp
+        ../libs/crypto/sha1.cpp
 )
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET ufo_torrent PROPERTY CXX_STANDARD 20)
-endif()
+add_executable(main main.cpp)
 
-# TODO: Добавьте тесты и целевые объекты, если это необходимо.
+# Force static linking everywhere
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+set(CMAKE_USE_SYSTEM_CURL OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 
+# For fully static linking, we need to link against static versions of system libraries
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 
+# If you want completely static (including libc), use:
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+
+#find_package(Boost 1.45.0 COMPONENTS system filesystem)
+
+target_link_libraries(main PRIVATE
+        Testing
+        ${CURSES_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${CURL_LIBRARIES}
+        #        LibtorrentRasterbar::torrent-rasterbar
+)

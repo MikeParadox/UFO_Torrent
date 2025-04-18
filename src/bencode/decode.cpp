@@ -10,8 +10,7 @@ using namespace bencode;
 using std::string;
 using std::pair;
 
-
-bool stringToLongLong(const std::string& str, unsigned long long& result) {
+bool stringToUnsignedLongLong(const std::string& str, unsigned long long& result) {
     try {
         result = boost::lexical_cast<unsigned long long>(str);
         return true;
@@ -21,139 +20,120 @@ bool stringToLongLong(const std::string& str, unsigned long long& result) {
     }
 }
 
-string Decoder::firstDigit(const string& str) {
-    string number;
-    for (int i = 0; i < str.size(); ++i) {
-        if (isdigit(str[i]))
-            number += str[i];
+std::string Decoder::firstDigit(const std::string& str) {
+    std::string number;
+    for (const char ch : str) {
+        if (std::isdigit(static_cast<unsigned char>(ch)))
+            number.push_back(ch);
         else if (!number.empty())
             break;
     }
     return number;
 }
 
-pair<unsigned long long, int> Decoder::decodeInt(const string& s) {
-    size_t eIndex = s.find_first_of('e');
-    
+std::pair<unsigned long long, int> Decoder::decodeInt(const std::string& s) {
+    auto eIndex = s.find_first_of('e');
+    if (eIndex == std::string::npos)
+        throw std::invalid_argument("Invalid integer encoding: missing 'e'");
+
+    std::string intPart = s.substr(1, eIndex - 1);
     unsigned long long value;
-    if (stringToLongLong(s.substr(1, eIndex - 1), value))
-        return pair<unsigned long long, int>(value, eIndex + 1);
-    else
-        throw std::invalid_argument("Wrong int in file");
+    if (!stringToUnsignedLongLong(intPart, value))
+        throw std::invalid_argument("Invalid integer value: " + intPart);
+
+    return { value, static_cast<int>(eIndex + 1) };
 }
 
-pair<string, int> Decoder::decodestring(const string& s) {
-    if (!isdigit(s[0])) 
-        throw std::invalid_argument("Wrong file struct");
+std::pair<std::string, int> Decoder::decodestring(const std::string& s) {
+    if (s.empty() || !std::isdigit(static_cast<unsigned char>(s[0])))
+        throw std::invalid_argument("Invalid string encoding: missing length");
 
-    string lengthPart = firstDigit(s);
-    size_t digitsInstring = lengthPart.size();
+    std::string lengthPart = firstDigit(s);
+    int digitsInString = static_cast<int>(lengthPart.size());
+    int length = std::stoi(lengthPart);
 
-    int length = stoi(lengthPart);
+    if (s.size() < static_cast<size_t>(digitsInString + 1) || s[digitsInString] != ':')
+        throw std::invalid_argument("Invalid string encoding: missing colon");
 
-    if (digitsInstring + 1 + length > s.size() || s[digitsInstring + 1] == ':')
-        throw std::invalid_argument("Wrong file struct");
+    if (s.size() < static_cast<size_t>(digitsInString + 1 + length))
+        throw std::invalid_argument("Invalid string encoding: length exceeds available data");
 
-    return pair<string, int>(
-        s.substr(digitsInstring + 1, length),
-        digitsInstring + 1 + length
-    );
+    return { s.substr(digitsInString + 1, length), digitsInString + 1 + length };
 }
 
-pair<ValueVector, int> Decoder::decodeList(const string& s) {
-    ValueVector xs; 
-    int index = 1; 
+std::pair<ValueVector, int> Decoder::decodeList(const std::string& s) {
+    ValueVector xs;
+    int index = 1;
 
-    while (index < s.length()) {
-        char currentChar = s[index];
-        if (currentChar == 'e') {
-            index += 1;
+    while (index < static_cast<int>(s.length())) {
+        if (s[index] == 'e') {
+            ++index;
             break;
         }
-
-        int i = 0;
-        Value b;
-
-        std::tie(b, i) = (_decode(s.substr(index)));
-
-        xs.push_back(b); 
-        index += i;    
+        auto [value, offset] = _decode(s.substr(index));
+        xs.push_back(value);
+        index += offset;
     }
 
-    return pair<ValueVector, int>(xs, index);
+    return { xs, index };
 }
 
-pair<ValueDictionary, int> Decoder::decodeDict(const string& s) {
-    ValueDictionary dict; 
-    int index = 1; 
+std::pair<ValueDictionary, int> Decoder::decodeDict(const std::string& s) {
+    ValueDictionary dict;
+    int index = 1;
 
-    while (index < s.length()) {
-        char currentChar = s[index];
-        if (currentChar == 'e') { 
-            index += 1;
+    while (index < static_cast<int>(s.length())) {
+        if (s[index] == 'e') {
+            ++index; 
             break;
         }
+        auto [keyValue, keyOffset] = _decode(s.substr(index));
 
-        Value key;
-        int i1;
-        Value value;
-        int i2;
+        const std::string* keyStr = boost::get<std::string>(&keyValue);
+        if (!keyStr)
+            throw std::invalid_argument("Invalid dictionary key: key must be a string");
 
-
-        std::tie(key, i1) = _decode(s.substr(index));
-        std::tie(value, i2) = _decode(s.substr(index + i1));
-
-        dict[boost::get<string>(key)] = value;
-        index += i1 + i2;
+        index += keyOffset;
+        auto [value, valueOffset] = _decode(s.substr(index));
+        dict[*keyStr] = value;
+        index += valueOffset;
     }
 
-    return pair<ValueDictionary, int>(dict, index); 
+    return { dict, index };
 }
 
-pair<Value, int> Decoder::_decode(const string& s) {
+std::pair<Value, int> Decoder::_decode(const std::string& s) {
+    if (s.empty())
+        throw std::invalid_argument("Cannot decode empty string");
+
     int index = 0;
+    char currChar = s[index];
 
-    pair<Value, int> result;
-    pair<ValueVector, int> pairList;
-    pair<ValueDictionary, int> pairDict;
-    pair<unsigned long long, int> pairInt;
-    pair<string, int> pairstring;
-
-    while (0 < s.length()) {
-        char currChar = s[index];
-
-        switch (currChar) {
-        case 'i': 
-            pairInt = decodeInt(s.substr(index));
-            index += pairInt.second;  
-            result = pair<Value, int>(pairInt.first, index);
-            return result;
-
-        case 'l':
-            pairList = decodeList(s.substr(index));
-            index += pairList.second;
-            result = pair<Value, int>(pairList.first, index);
-            return result;
-
-        case 'd':
-            pairDict = decodeDict(s.substr(index));
-            index += pairDict.second;
-            result = pair<Value, int>(pairDict.first, index);
-            return result;
-
-        default:
-            pairstring = decodestring(s.substr(index));
-            index += pairstring.second;
-            result = pair<Value, int>(pairstring.first, index);
-            return result;
-        }
+    switch (currChar) {
+    case 'i': {
+        auto [value, offset] = decodeInt(s);
+        return { value, offset };
     }
-
-    return result;
+    case 'l': {
+        auto [list, offset] = decodeList(s);
+        return { list, offset };
+    }
+    case 'd': {
+        auto [dict, offset] = decodeDict(s);
+        return { dict, offset };
+    }
+    default: {
+        auto [strValue, offset] = decodestring(s);
+        return { strValue, offset };
+    }
+    }
 }
 
-Value Decoder::decode(const string& string) {
-    return _decode(string).first;
+Value Decoder::decode(const std::string& str) {
+    return _decode(str).first;
 }
 
-pair<ValueDictionary, int> Dt::decodeDc(const string& s) { return Decoder::decodeDict(s); }
+std::pair<ValueDictionary, int> Dt::decodeDc(const std::string& s) {
+    return Decoder::decodeDict(s);
+}
+
