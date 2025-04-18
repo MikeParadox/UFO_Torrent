@@ -46,7 +46,10 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
 
         for (const auto& entry : fs::directory_iterator(currentDir)) {
             try {
-                files.push_back(entry.path().filename().string());
+                if (entry.is_directory() || (entry.is_regular_file() && entry.path().extension() == ".torrent"))
+                {
+                    files.push_back(entry.path().filename().string());
+                }
             }
             catch (const fs::filesystem_error& e) {
                 if (e.code() == std::errc::permission_denied) {
@@ -168,6 +171,7 @@ void redraw_interface(WINDOW* left_win, WINDOW* right_win, MENU* left_menu) {
 
 int main() {
     setlocale(LC_ALL, "");
+    // setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     cbreak();
     noecho();
