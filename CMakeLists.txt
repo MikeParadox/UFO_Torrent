@@ -5,7 +5,7 @@ project("ufo_torrent"
         LANGUAGES CXX)
 
 # set(CMAKE_CXX_COMPILER "/usr/bin/clang++")                
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-14")
+#set(CMAKE_CXX_COMPILER "/usr/bin/g++-14")
 
 if (POLICY CMP0141)
     cmake_policy(SET CMP0141 NEW)
