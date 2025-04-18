@@ -37,5 +37,5 @@ include_directories(libs/bencode)
 add_subdirectory("src")
 add_subdirectory("tests")
 
-target_compile_options(main PRIVATE
-        -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses)
+#target_compile_options(main PRIVATE
+#       -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses)
