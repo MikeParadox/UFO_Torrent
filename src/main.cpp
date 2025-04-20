@@ -34,10 +34,10 @@ struct WindowState
 
 WindowState left_win, right_win;
 std::set<std::string> selectedTorrents;
-const std::vector<std::string> left_items = { "Add Torrent","Select DownDir", "Exit"};
+const std::vector<std::string> left_items = { "Add Torrent","Select DownDir", "Exit" };
 
 // Global libtorrent session
-lt::session torrent_session;
+//lt::session torrent_session;
 
 void renderWindows(WINDOW* lwin, WINDOW* rwin)
 {
@@ -74,40 +74,105 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
 
 std::string fileDialog(WINDOW* win, const std::string& startDir = ".")
 {
-    std::string currentDir = startDir;
-    if (startDir == ".")
-    {
-        currentDir = fs::current_path().string();
-    }
-
+    std::string currentDir = (startDir == ".") ? fs::current_path().string() : startDir;
     std::vector<std::string> files;
     int selected = 0;
+    std::string errorMsg;
 
-    const int MAX_VISIBLE_LINES = 7;
-    const int PADDING = 3;
+    auto calculate_path_height = [](const std::string& path, const std::string& error = "")
+        {
+            int max_width = COLS - 4;
+            int lines = 1;
+            size_t pos = 0;
+
+            while (pos < path.length())
+            {
+                pos += max_width;
+                lines++;
+            }
+
+            return std::max(lines + 2, 3); // +2 for borders
+        };
+
+    int path_win_height = calculate_path_height(currentDir);
+    int path_win_y = LINES - path_win_height;
+    WINDOW* path_win = newwin(path_win_height, COLS, path_win_y, 0);
+    keypad(win, TRUE);
+
+    auto refresh_path_window = [&]()
+        {
+            werase(path_win);
+            box(path_win, 0, 0);
+
+            std::string path = "Current Path: " + currentDir;
+            int max_width = COLS - 4;
+            int line = 1;
+            size_t pos = 0;
+
+            while (pos < path.length())
+            {
+                size_t end = std::min(pos + max_width, path.length());
+                mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos), path.c_str() + pos);
+                pos = end;
+            }
+
+            if (!errorMsg.empty())
+            {
+                line++; 
+                wattron(path_win, COLOR_PAIR(1) | A_BOLD);
+                pos = 0;
+                while (pos < errorMsg.length())
+                {
+                    size_t end = std::min(pos + max_width, errorMsg.length());
+                    mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos), errorMsg.c_str() + pos);
+                    pos = end;
+                }
+                wattroff(path_win, COLOR_PAIR(1) | A_BOLD);
+            }
+
+            wrefresh(path_win);
+        };
+
 
     while (true)
     {
-        files.clear();
-        files.push_back("..");
-
-        for (const auto& entry : fs::directory_iterator(currentDir))
-        {
-            try
+        errorMsg.clear();
+        files = { ".." };
+            for (const auto& entry : fs::directory_iterator(currentDir))
             {
-                if (entry.is_directory() || (entry.is_regular_file() && entry.path().extension() == ".torrent"))
+                try
                 {
-                    files.push_back(entry.path().filename().string());
+                    if (entry.is_directory() || (entry.is_regular_file() && entry.path().extension() == ".torrent"))
+                    {
+                        files.push_back(entry.path().filename().string());
+                    }
                 }
-            }
-            catch (const fs::filesystem_error& e)
-            {
-                if (e.code() == std::errc::permission_denied)
+                catch (const fs::filesystem_error& e)
                 {
                     continue;
                 }
             }
+
+
+        selected = std::clamp(selected, 0, (int)files.size() - 1);
+
+        int new_height = calculate_path_height(currentDir, errorMsg);
+        if (new_height != path_win_height)
+        {
+            path_win_height = new_height;
+            path_win_y = LINES - path_win_height;
+            delwin(path_win);
+            path_win = newwin(path_win_height, COLS, path_win_y, 0);
         }
+
+        refresh_path_window();
+
+        werase(win);
+        box(win, 0, 0);
+
+        int max_width = getmaxx(win) - 4;
+        int max_height = getmaxy(win) - 4;
+        int MAX_VISIBLE_LINES = max_height;
 
         int startIndex = 0;
         if (selected >= MAX_VISIBLE_LINES)
@@ -116,34 +181,20 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".")
         }
 
         int numRows = std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
-        numRows = std::max(numRows, 3);
 
-        werase(win);
-
-        int max_width = getmaxx(win) - 2 * PADDING;
-
-        mvwprintw(win, 0, PADDING, "Select a .torrent file ");
-        mvwprintw(win, 1, PADDING, "(ENTER to select, Q to quit):");
-        mvwprintw(win, 2, PADDING, "Current Directory: %.*s", max_width, currentDir.c_str());
-
-        int currDirLines = (22 + currentDir.size()) / 40;
+        mvwprintw(win, 1, 2, "Select a .torrent file (ENTER to select, Q to quit)");
 
         for (int i = 0; i < numRows; ++i)
         {
             int fileIndex = startIndex + i;
             if (fileIndex < (int)files.size())
             {
-                if (fileIndex == selected)
-                {
-                    wattron(win, A_REVERSE);
-                }
-                mvwprintw(win, i + 3 + currDirLines, PADDING, "%.*s", max_width, files[fileIndex].c_str());
-                if (fileIndex == selected)
-                {
-                    wattroff(win, A_REVERSE);
-                }
+                if (fileIndex == selected) wattron(win, A_REVERSE);
+                mvwprintw(win, 2 + i, 2, "%.*s", max_width, files[fileIndex].c_str());
+                if (fileIndex == selected) wattroff(win, A_REVERSE);
             }
         }
+
         wrefresh(win);
 
         int key = wgetch(win);
@@ -153,36 +204,85 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".")
             if (selected > 0) --selected;
             break;
         case KEY_DOWN:
-            if ((size_t)selected < files.size() - 1) ++selected;
+            if (selected < (int)files.size() - 1) ++selected;
             break;
-        case 10:
-            if (files[selected] == "..")
+        case 10: // Enter
+        {
+            const std::string& choice = files[selected];
+            if (choice == "..")
             {
-                auto parentDir = fs::path(currentDir).parent_path();
-                if (fs::exists(parentDir) && fs::is_directory(parentDir))
+                auto parent = fs::path(currentDir).parent_path();
+                if (!parent.empty())
                 {
-                    currentDir = parentDir.string();
-                    selected = 0;
+                    try
+                    {
+                        if (fs::exists(parent) && fs::is_directory(parent))
+                        {
+                            currentDir = parent.string();
+                            selected = 0;
+                        }
+                    }
+                    catch (const fs::filesystem_error& e)
+                    {
+                        errorMsg = "Error: " + std::string(e.what());
+                    }
                 }
             }
-            else if (fs::is_directory(currentDir + "/" + files[selected]))
+            else
             {
-                currentDir += "/" + files[selected];
-                selected = 0;
-            }
-            else if (files[selected].find(".torrent") != std::string::npos)
-            {
-                return currentDir + "/" + files[selected];
+                auto path = fs::path(currentDir) / choice;
+                try
+                {
+                    if (fs::is_directory(path))
+                    {
+                        fs::directory_iterator test_it(path);
+                        currentDir = path.string();
+                        selected = 0;
+                    }
+                    else if (path.extension() == ".torrent")
+                    {
+                        werase(path_win);
+                        wrefresh(path_win);
+                        delwin(path_win);
+                        touchwin(stdscr);
+                        refresh();
+                        return path.string();
+                    }
+                }
+                catch (const fs::filesystem_error& e)
+                {
+                    errorMsg = "Error: " + std::string(e.what());
+                }
             }
             break;
-        case 'q':
-        case 'Q':
+        }
+        case 'q': case 'Q':
+            werase(path_win);
+            wrefresh(path_win);
+            delwin(path_win);
+            touchwin(stdscr);
+            refresh();
             return "";
-        case KEY_BACKSPACE:
-        case 127:
-            currentDir = fs::path(currentDir).parent_path().string();
-            selected = 0;
+        case KEY_BACKSPACE: case 127:
+        {
+            auto parent = fs::path(currentDir).parent_path();
+            if (!parent.empty())
+            {
+                try
+                {
+                    if (fs::exists(parent) && fs::is_directory(parent))
+                    {
+                        currentDir = parent.string();
+                        selected = 0;
+                    }
+                }
+                catch (const fs::filesystem_error& e)
+                {
+                    errorMsg = "Error: " + std::string(e.what());
+                }
+            }
             break;
+        }
         }
     }
 }
@@ -231,35 +331,33 @@ int main()
             case 10:
                 if (left_win.selected == 0)
                 {
-                    WINDOW* fwin = newwin(LINES / 2, COLS / 2, LINES / 4, COLS / 4);
-                    box(fwin, 0, 0); // Draw the border
-                    wrefresh(fwin); // Refresh to show the border
+                    //WINDOW* fwin = newwin(LINES * 3 / 4, COLS * 3 / 4, LINES / 8, COLS / 8);
+                    //box(fwin, 0, 0);
+                    //wrefresh(fwin);
 
-                    WINDOW* tfwin = newwin((LINES / 2) - 2, (COLS / 2) - 2, (LINES / 4) + 1, (COLS / 4) + 1);
+                    WINDOW* tfwin = newwin((LINES * 3 / 4) - 2, (COLS * 3 / 4) - 2, (LINES / 8) + 1, (COLS / 8) + 1);
                     keypad(tfwin, TRUE);
                     std::string path = fileDialog(tfwin);
                     delwin(tfwin);
-                    delwin(fwin);
+                    //delwin(fwin);
 
                     if (!path.empty())
                     {
                         selectedTorrents.insert(path);
                         right_win.items.assign(selectedTorrents.begin(), selectedTorrents.end());
-
-                        // Add torrent to libtorrent session
-                        try
-                        {
-                            lt::add_torrent_params atp;
-                            atp.ti = std::make_shared<lt::torrent_info>(path);
-                            atp.save_path = "."; // Change to desired download folder
-                            torrent_session.add_torrent(atp);
-                        }
-                        catch (const std::exception& e)
-                        {
-                            mvprintw(LINES - 2, 0, "Failed to add torrent: %s", e.what());
-                            clrtoeol();
-                            refresh();
-                        }
+                        //try
+                        //{
+                        //    lt::add_torrent_params atp;
+                        //    atp.ti = std::make_shared<lt::torrent_info>(path);
+                        //    atp.save_path = ".";
+                        //    torrent_session.add_torrent(atp);
+                        //}
+                        //catch (const std::exception& e)
+                        //{
+                        //    mvprintw(LINES - 2, 0, "Failed to add torrent: %s", e.what());
+                        //    clrtoeol();
+                        //    refresh();
+                        //}
                     }
                     renderWindows(lwin, rwin);
                 }
