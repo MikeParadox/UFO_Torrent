@@ -38,7 +38,7 @@ TEST_F(PrettyPrinterTest, PrintsAsciiString) {
 TEST_F(PrettyPrinterTest, PrintsBinaryDataNotice) {
     redirectCout();
     PrettyPrinter printer;
-    printer(std::string("\x01\x02\x03", 3)); // Не-ASCII данные
+    printer(std::string("\x01\x02\x03", 3)); // ??-ASCII ??????
     restoreCout();
 
     EXPECT_EQ(buffer.str(), "BINARY DATA (length: 3)\n");
