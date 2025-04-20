@@ -180,6 +180,7 @@ void redraw_interface(WINDOW* left_win, WINDOW* right_win) {
 }
 
 int main() {
+    setenv("TERMINFO", "/usr/share/terminfo", 1);
     setlocale(LC_ALL, "");
     initscr();
     cbreak();
