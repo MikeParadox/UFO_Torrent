@@ -29,7 +29,8 @@ int right_win_selected = 0;  // Track selected item in right window
 int left_win_selected = 0;   // Track selected item in left window
 const char* left_choices[] = { "Add Torrent", "Exit" };
 
-std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
+std::string fileDialog(WINDOW* win, const std::string& startDir = ".", const bool& only_dirs = false) 
+{
     std::string currentDir = startDir;
     if (startDir == ".") {
         currentDir = fs::current_path().string();
@@ -47,8 +48,7 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
 
         for (const auto& entry : fs::directory_iterator(currentDir)) {
             try {
-                if (entry.is_directory() || (entry.is_regular_file() && entry.path().extension() == ".torrent"))
-                {
+                if (entry.is_directory() || (!only_dirs && entry.is_regular_file() && entry.path().extension() == ".torrent")) {
                     files.push_back(entry.path().filename().string());
                 }
             }
@@ -106,6 +106,9 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
                 }
             }
             else if (fs::is_directory(currentDir + "/" + files[selected])) {
+                if (only_dirs) { // added
+                    return currentDir + "/" + files[selected];
+                }
                 currentDir += "/" + files[selected];
                 selected = 0;
             }
@@ -184,7 +187,7 @@ void redraw_interface(WINDOW* left_win, WINDOW* right_win) {
 
 int main() {
     setlocale(LC_ALL, "");
-    // setenv("TERMINFO", "/usr/share/terminfo", 1);
+    setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     cbreak();
     noecho();
@@ -253,11 +256,17 @@ int main() {
                     wrefresh(fileWin);
                     WINDOW* truefileWin = newwin(12, 40, 6, 11);
                     keypad(truefileWin, TRUE);
-                    std::string selectedFile = fileDialog(truefileWin);
+                    std::string selectedFile = fileDialog(truefileWin, ".", true); // HERE TESTING
                     delwin(fileWin);
                     delwin(truefileWin);
 
-                    if (!selectedFile.empty()) {
+                    // ONLY FOR TESTING
+                    if (fs::is_directory(selectedFile))
+                    {
+                        mvwprintw(stdscr, 4, 2, "%s", selectedFile.c_str());
+                        refresh();
+                    } // else added
+                    else if (!selectedFile.empty()) {
                         TorrentFile file = parseTorrentFile(Decoder::decode(read(selectedFile)));
                         selectedTorrents.insert(selectedFile);
                         refresh_right_win(right_win);
