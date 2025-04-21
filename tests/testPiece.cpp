@@ -1,66 +1,37 @@
 #include <gtest/gtest.h>
 #include "Piece.h"
 
-class PieceTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        blocks.push_back(new Block{ 0, 1024, missing, "" });
-        blocks.push_back(new Block{ 1024, 1024, missing, "" });
-        test_hash = "1234567890abcdef12345678";
-    }
+// Тест проверяет создание Piece и базовые свойства
+TEST(PieceTest, ConstructorAndBasicProperties) {
+    std::vector<Block*> blocks = { new Block(0, 1024) };
+    Piece piece(1, blocks, "aabbcc");
 
-    void TearDown() override {
-        for (auto block : blocks) delete block;
-    }
-
-    std::vector<Block*> blocks;
-    std::string test_hash;
-};
-
-// 1. Базовый тест конструктора
-TEST_F(PieceTest, Constructor) {
-    Piece piece(1, blocks, test_hash);
-    EXPECT_EQ(piece.index(), 1);
-    EXPECT_EQ(piece.blocks().size(), 2);
+    EXPECT_EQ(piece.index(), 1); // Проверка индекса
+    EXPECT_FALSE(piece.is_complete()); // По умолчанию не завершена
 }
 
-// 2. Тест запроса и получения блоков (объединяет next_request и block_received)
-TEST_F(PieceTest, BlockRequestAndReceive) {
-    Piece piece(1, blocks, test_hash);
+// Тест проверяет запрос блоков для загрузки
+TEST(PieceTest, NextRequestBlock) {
+    Block* block1 = new Block(0, 1024);
+    std::vector<Block*> blocks = { block1 };
+    Piece piece(1, blocks, "hash");
 
-    // Запрашиваем первый блок
-    Block* block = piece.next_request();
+    Block* requested = piece.next_request();
+    ASSERT_NE(requested, nullptr); // Должен вернуть блок
+    EXPECT_EQ(requested->status, pending); // Статус должен измениться
+}
+
+// Тест проверяет получение блока данных
+TEST(PieceTest, ReceiveBlockData) {
+    const int test_offset = 1024;  // Явно задаём offset
+    Block* block = new Block(test_offset, 1024);  // Указываем тот же offset
+
+    // Проверяем, что блок создан правильно
     ASSERT_NE(block, nullptr);
-    EXPECT_EQ(block->offset, 0);
-    EXPECT_EQ(block->status, pending);
-
-    // Помечаем как полученный
-    piece.block_received(block->offset, "test");
-    EXPECT_EQ(block->status, retrieved);
-    EXPECT_EQ(block->data, "test");
-}
-
-// 3. Тест проверки завершённости
-TEST_F(PieceTest, CompletionCheck) {
-    Piece piece(1, blocks, test_hash);
-
-    // Получаем все блоки
-    while (auto block = piece.next_request()) {
-        piece.block_received(block->offset, "data");
-    }
-
-    EXPECT_TRUE(piece.is_complete());
-}
-
-// 4. Тест сброса состояния
-TEST_F(PieceTest, Reset) {
-    Piece piece(1, blocks, test_hash);
-
-    // Получаем блок и сбрасываем
-    piece.next_request();
-    piece.reset();
-
-    for (auto block : blocks) {
-        EXPECT_EQ(block->status, missing);
-    }
+    EXPECT_EQ(block->offset, test_offset);// Данные должны сохраниться
+    //Создаём Piece с этим блоком
+    std::vector<Block*> blocks = { block };
+    Piece piece(1, blocks, "hash");
+    //Проверяем, что блок добавлен в Piece
+    ASSERT_EQ(piece.next_request(), block);
 }

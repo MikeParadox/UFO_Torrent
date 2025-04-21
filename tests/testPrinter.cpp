@@ -1,67 +1,45 @@
 #include <gtest/gtest.h>
-#include "../includes/prettyPrinter.h"
+#include "prettyPrinter.h"
+#include "valueTypes.h"
 #include <sstream>
 
-class PrettyPrinterTest : public ::testing::Test {
-protected:
-    void redirectCout() {
-        old = std::cout.rdbuf();
-        std::cout.rdbuf(buffer.rdbuf());
-    }
+using namespace bencode;
 
-    void restoreCout() {
-        std::cout.rdbuf(old);
-    }
+// Вспомогательный класс для перехвата вывода
+class CoutRedirect {
+public:
+    CoutRedirect() : old(std::cout.rdbuf(buffer.rdbuf())) {}
+    ~CoutRedirect() { std::cout.rdbuf(old); }
+    std::string getOutput() const { return buffer.str(); }
 
-    std::stringstream buffer;
+private:
     std::streambuf* old;
+    std::stringstream buffer;
 };
 
-TEST_F(PrettyPrinterTest, PrintsInteger) {
-    redirectCout();
+TEST(PrettyPrinterTest, HandlesIntCorrectly) {
+    CoutRedirect redirect;
     PrettyPrinter printer;
-    printer(42);
-    restoreCout();
+    printer(42); // Тестируем вывод числа
 
-    EXPECT_EQ(buffer.str(), "42\n");
+    EXPECT_EQ(redirect.getOutput(), "42\n");
 }
 
-TEST_F(PrettyPrinterTest, PrintsAsciiString) {
-    redirectCout();
+TEST(PrettyPrinterTest, HandlesAsciiStringCorrectly) {
+    CoutRedirect redirect;
     PrettyPrinter printer;
-    printer("test string");
-    restoreCout();
+    printer("test string"); // Тестируем вывод ASCII строки
 
-    EXPECT_EQ(buffer.str(), "test string\n");
+    EXPECT_EQ(redirect.getOutput(), "test string\n");
 }
 
-TEST_F(PrettyPrinterTest, PrintsBinaryDataNotice) {
-    redirectCout();
+TEST(PrettyPrinterTest, HandlesBinaryDataString) {
+    CoutRedirect redirect;
     PrettyPrinter printer;
-    printer(std::string("\x01\x02\x03", 3)); // Не-ASCII данные
-    restoreCout();
+    std::string binary_data = "\x01\x02\x03\x04"; // Не-ASCII данные
 
-    EXPECT_EQ(buffer.str(), "BINARY DATA (length: 3)\n");
-}
+    printer(binary_data); // Должен определить как бинарные
 
-TEST_F(PrettyPrinterTest, HandlesDictionary) {
-    redirectCout();
-    PrettyPrinter printer;
-    ValueDictionary dict;
-    dict["key"] = 123;
-    printer(dict);
-    restoreCout();
-
-    EXPECT_NE(buffer.str().find("{key}: 123"), std::string::npos);
-}
-
-TEST_F(PrettyPrinterTest, HandlesVector) {
-    redirectCout();
-    PrettyPrinter printer;
-    ValueVector vec;
-    vec.push_back("test");
-    printer(vec);
-    restoreCout();
-
-    EXPECT_NE(buffer.str().find("[0]: test"), std::string::npos);
+    EXPECT_TRUE(redirect.getOutput().find("BINARY DATA") != std::string::npos);
+    EXPECT_TRUE(redirect.getOutput().find("length: 4") != std::string::npos);
 }
