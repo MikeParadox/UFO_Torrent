@@ -36,7 +36,12 @@ TEST(PrettyPrinterTest, HandlesAsciiStringCorrectly) {
 TEST(PrettyPrinterTest, HandlesBinaryDataString) {
     CoutRedirect redirect;
     PrettyPrinter printer;
+<<<<<<< HEAD
     std::string binary_data = "\x01\x02\x03\x04"; // Не-ASCII данные
+=======
+    printer(std::string("\x01\x02\x03", 3)); // ??-ASCII ??????
+    restoreCout();
+>>>>>>> 20067badcfe24f041cd5d1845338247b9e8fb992
 
     printer(binary_data); // Должен определить как бинарные
 

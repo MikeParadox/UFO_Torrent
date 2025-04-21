@@ -16,7 +16,7 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
 
-add_library(Testing STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
+add_library(Source STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
         ./bencode/decode.cpp
         ./bencode/prettyPrinter.cpp
         ./bencode/encode.cpp
@@ -64,7 +64,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-lib
 #find_package(Boost 1.45.0 COMPONENTS system filesystem)
 
 target_link_libraries(main PRIVATE
-        Testing
+        Source
         ${CURSES_LIBRARIES}
         ${Boost_LIBRARIES}
         ${CURL_LIBRARIES}
