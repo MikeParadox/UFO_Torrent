@@ -1,3 +1,8 @@
+/**
+ * @file TorrentFileParser.h
+ * @brief Parses .torrent files.
+ * @details Extracts metadata from bencoded torrent files.
+ */
 #ifndef TORRENTFILEPARSER_H
 #define TORRENTFILEPARSER_H
 
@@ -9,29 +14,64 @@
 
 using byte = unsigned char;
 
-/**
- * A class that parses a given Torrent file. The result returned
- * by bencoding decoder is a pointer to a custom BItem object, which can be a
- * dictionary, a list, an integer, or a string. To retrieve the value of a
- * specific key in the top level dictionary, an instance function named
- * getValue() was added to the BDictionary class. It recursively checks the keys
- * of all dictionaries from the top level and returns the value of key, if it
- * exists.
- */
 
+/**
+* @class TorrentFileParser
+* @brief Parses bencoded torrent files.
+*/
 class TorrentFileParser
 {
 private:
-    std::shared_ptr<bencoding::BDictionary> root;
+    std::shared_ptr<bencoding::BDictionary> root; /**< Parsed torrent data. */
 
 public:
+    /**
+         * @brief Constructs parser and loads file.
+         * @param filePath Path to .torrent file.
+         */
     explicit TorrentFileParser(const std::string& filePath);
+
+    /**
+     * @brief Gets total file size.
+     * @return Size in bytes.
+     */
     long getFileSize() const;
+
+    /**
+     * @brief Gets piece length.
+     * @return Piece length in bytes.
+     */
     long getPieceLength() const;
+
+    /**
+     * @brief Gets output filename.
+     * @return Filename string.
+     */
     std::string getFileName() const;
+
+    /**
+     * @brief Gets tracker URL.
+     * @return Announce URL.
+     */
     std::string getAnnounce() const;
+
+    /**
+     * @brief Gets value by key from torrent.
+     * @param key Key to lookup.
+     * @return Shared pointer to BItem.
+     */
     std::shared_ptr<bencoding::BItem> get(std::string key) const;
+
+    /**
+     * @brief Calculates info hash.
+     * @return SHA-1 hash string.
+     */
     std::string getInfoHash() const;
+
+    /**
+     * @brief Splits piece hashes.
+     * @return Vector of piece hash strings.
+     */
     std::vector<std::string> splitPieceHashes() const;
 };
 
