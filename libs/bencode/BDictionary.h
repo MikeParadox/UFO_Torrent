@@ -1,127 +1,126 @@
 /**
-* @file      BDictionary.h
-* @copyright (c) 2014 by Petr Zemek (s3rvac@gmail.com) and contributors
-* @license   BSD, see the @c LICENSE file for more details
-* @brief     Representation of a dictionary.
-*/
-
+ * @file BDictionary.h
+ * @brief Representation of a bencoded dictionary (key-value pairs).
+ * @details Implements a dictionary structure that maintains keys in lexicographical order
+ *          as required by the BitTorrent specification. The interface mimics std::map.
+ * @see https://wiki.theory.org/BitTorrentSpecification#Bencoding
+ */
 #ifndef BENCODING_BDICTIONARY_H
 #define BENCODING_BDICTIONARY_H
 
 #include <initializer_list>
 #include <map>
 #include <memory>
-
 #include "BItem.h"
 
 namespace bencoding {
 
-class BString;
+    class BString;
 
-/**
-* @brief Representation of a dictionary.
-*
-* The interface models the interface of @c std::map.
-*
-* According to the <a
-* href="https://wiki.theory.org/BitTorrentSpecification#Bencoding">specification</a>,
-* the keys should appear in a lexicographical order by the string values. This
-* has the following consequences for the users of the BDictionary class:
-*  - When accessing or modifying elements by @c std::shared_ptr<BString>, its
-*    value is taken into account, not its address. That is, two different smart
-*    pointers pointing to strings with equal values are considered to be equal
-*    when accessing or modifying elements.
-*  - The iterators return elements in a sorted order by the values of string
-*    keys, despite using smart pointers to index the dictionary.
-*
-* Use create() to create instances of the class.
-*/
-class BDictionary: public BItem {
-private:
-	/**
-	* @brief Comparator of keys for the dictionary.
-	*
-	* It compares the instances of BString inside smart pointers by their value
-	* rather than by their address.
-	*/
-	class BStringByValueComparator {
-	public:
-		bool operator()(const std::shared_ptr<BString> &lhs,
-			const std::shared_ptr<BString> &rhs) const;
-	};
+    /**
+     * @class BDictionary
+     * @brief Bencoded dictionary implementation.
+     *
+     * Example usage:
+     * @code
+     * auto dict = BDictionary::create();
+     * (*dict)[BString::create("key")] = BString::create("value");
+     * @endcode
+     */
+    class BDictionary : public BItem {
+    private:
+        /**
+         * @class BStringByValueComparator
+         * @brief Comparator for BString smart pointers.
+         * @details Compares the string values rather than pointer addresses.
+         */
+        class BStringByValueComparator {
+        public:
+            /**
+             * @brief Comparison operator
+             * @param lhs Left-hand side string
+             * @param rhs Right-hand side string
+             * @return true if lhs < rhs by value
+             */
+            bool operator()(const std::shared_ptr<BString>& lhs,
+                const std::shared_ptr<BString>& rhs) const;
+        };
 
-private:
-	/// Mapping of strings into items.
-	// See the class description for the reason why a custom comparator is
-	// used instead of @c std::less<>.
-	using BItemMap = std::map<std::shared_ptr<BString>,
-		std::shared_ptr<BItem>, BStringByValueComparator>;
+        /// Map type using custom comparator
+        using BItemMap = std::map<std::shared_ptr<BString>,
+            std::shared_ptr<BItem>, BStringByValueComparator>;
 
-public:
-	/// Key type.
-	using key_type = BItemMap::key_type;
+    public:
+        // Standard map typedefs
+        using key_type = BItemMap::key_type;
+        using mapped_type = BItemMap::mapped_type;
+        using value_type = BItemMap::value_type;
+        using size_type = BItemMap::size_type;
+        using reference = BItemMap::reference;
+        using const_reference = BItemMap::const_reference;
+        using iterator = BItemMap::iterator;
+        using const_iterator = BItemMap::const_iterator;
 
-	/// Mapped type.
-	using mapped_type = BItemMap::mapped_type;
+    public:
+        /**
+         * @brief Creates an empty dictionary
+         * @return Unique pointer to new dictionary
+         */
+        static std::unique_ptr<BDictionary> create();
 
-	/// Value type.
-	using value_type = BItemMap::value_type;
+        /**
+         * @brief Creates a dictionary from initializer list
+         * @param items Initial key-value pairs
+         * @return Unique pointer to new dictionary
+         */
+        static std::unique_ptr<BDictionary> create(
+            std::initializer_list<value_type> items);
 
-	/// Size type.
-	using size_type = BItemMap::size_type;
+        /// @name Capacity
+        /// @{
+        size_type size() const;
+        bool empty() const;
+        /// @}
 
-	/// Reference.
-	using reference = BItemMap::reference;
+        /// @name Element Access
+        /// @{
+        /**
+         * @brief Accesses or creates element by key
+         * @param key Dictionary key
+         * @return Reference to mapped value
+         */
+        mapped_type& operator[](const key_type& key);
+        /// @}
 
-	/// Constant reference.
-	using const_reference = BItemMap::const_reference;
+        /// @name Iterators
+        /// @{
+        iterator begin();
+        iterator end();
+        const_iterator begin() const;
+        const_iterator end() const;
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+        /// @}
 
-	/// Iterator.
-	using iterator = BItemMap::iterator;
+        /// @name Visitor Pattern
+        /// @{
+        virtual void accept(BItemVisitor* visitor) override;
+        /// @}
 
-	/// Constant iterator.
-	using const_iterator = BItemMap::const_iterator;
+        /**
+         * @brief Gets value by string key
+         * @param key String key to lookup
+         * @return Shared pointer to item or nullptr if not found
+         */
+        std::shared_ptr<BItem> getValue(const std::string& key);
 
-public:
-	static std::unique_ptr<BDictionary> create();
-	static std::unique_ptr<BDictionary> create(
-		std::initializer_list<value_type> items);
+    private:
+        BDictionary();
+        explicit BDictionary(std::initializer_list<value_type> items);
 
-	/// @name Capacity
-	/// @{
-	size_type size() const;
-	bool empty() const;
-	/// @}
-
-	/// @name Element Access and Modifiers
-	/// @{
-	mapped_type &operator[](const key_type &key);
-	/// @}
-
-	/// @name Iterators
-	/// @{
-	iterator begin();
-	iterator end();
-	const_iterator begin() const;
-	const_iterator end() const;
-	const_iterator cbegin() const;
-	const_iterator cend() const;
-	/// @}
-
-	/// @name BItemVisitor Support
-	/// @{
-	virtual void accept(BItemVisitor *visitor) override;
-	/// @}
-    std::shared_ptr<BItem> getValue(const std::string& key);
-private:
-	BDictionary();
-	explicit BDictionary(std::initializer_list<value_type> items);
-
-private:
-	/// Underlying list of items.
-	BItemMap itemMap;
-};
+    private:
+        BItemMap itemMap; ///< Underlying map storage
+    };
 
 } // namespace bencoding
-
 #endif
