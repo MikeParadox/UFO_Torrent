@@ -243,7 +243,7 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
     }
 }
 
-std::string fileDialog(WINDOW* parent, const std::string& startDir = ".")
+std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const bool& only_dirs = false)
 {
     std::string currentDir = (startDir == ".") ? fs::current_path().string() : startDir;
     std::vector<std::string> files;
@@ -333,7 +333,7 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".")
             {
                 try
                 {
-                    if (entry.is_directory() || (entry.is_regular_file() && entry.path().extension() == ".torrent"))
+                    if (entry.is_directory() || (!only_dirs && entry.is_regular_file() && entry.path().extension() == ".torrent"))
                     {
                         files.push_back(entry.path().filename().string());
                     }
@@ -378,7 +378,14 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".")
 
         int numRows = std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
 
-        mvwprintw(dialog, 1, 2, "Select a .torrent file (ENTER to select, Q to quit)");
+        if (only_dirs)
+        {
+            mvwprintw(dialog, 1, 2, "Select a download directory (E to move into, ENTER to select, Q to quit)");
+        }
+        else 
+        {
+            mvwprintw(dialog, 1, 2, "Select a .torrent file (ENTER to select, Q to quit)");
+        }
 
         for (int i = 0; i < numRows; ++i)
         {
@@ -402,6 +409,22 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".")
         case KEY_DOWN:
             if (selected < (int)files.size() - 1) ++selected;
             break;
+        case 'e': case 'E':
+            if (only_dirs)
+            {
+                auto path = fs::path(currentDir) / files[selected];
+                try
+                {
+                    fs::directory_iterator test_it(path);
+                    currentDir = path.string();
+                    selected = 0;
+                }
+                catch (const fs::filesystem_error& e)
+                {
+                    errorMsg = "Error: " + std::string(e.what());
+                }
+            }
+            break;
         case 10:
         { // Enter
             const std::string& choice = files[selected];
@@ -423,6 +446,10 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".")
                         errorMsg = "Error: " + std::string(e.what());
                     }
                 }
+            }
+            else if (only_dirs)
+            {
+                return (fs::path(currentDir) / choice).string();
             }
             else
             {
@@ -569,6 +596,12 @@ int main() {
                     renderWindows(lwin, rwin);
                 }
                 else if (left_win.selected == 1)
+                {
+                    std::string downDir = fileDialog(stdscr, ".", true);
+                    mvprintw(3, 3, "%s", downDir.c_str());
+                    refresh();
+                }
+                else if (left_win.selected == 2)
                 {
                     goto cleanup;
                 }
