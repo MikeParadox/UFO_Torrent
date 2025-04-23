@@ -34,6 +34,9 @@ struct WindowState
 
 WindowState left_win, right_win;
 std::set<std::string> selectedTorrents;
+std::string downDir = ".";
+WINDOW* lwin;
+WINDOW* rwin;
 const std::vector<std::string> left_items = { "Add Torrent", "Select DownDir", "Exit" };
 
 lt::session torrent_session;
@@ -116,20 +119,16 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
             {
                 mvwprintw(content, row++, 1, "Files:");
 
-                // Calculate if we need scrolling
                 needs_scrolling = (file.info.files.size() > static_cast<size_t>(max_content_rows));
 
-                // Display files in tree-like structure
                 std::map<std::string, std::vector<std::pair<std::string, unsigned long long>>> dir_structure;
-
-                // Build directory structure
                 for (const auto& fileInfo : file.info.files)
                 {
                     std::string current_path;
                     for (size_t i = 0; i < fileInfo.path.size() - 1; i++)
                     {
                         current_path += (current_path.empty() ? "" : "/") + fileInfo.path[i];
-                        dir_structure[current_path]; // Ensure directory exists
+                        dir_structure[current_path]; 
                     }
                     if (!fileInfo.path.empty())
                     {
@@ -137,14 +136,11 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                             fileInfo.path.back(), fileInfo.length);
                     }
                 }
-
-                // Recursive function to display tree
                 std::function<void(const std::string&, int, int&)> display_tree =
                     [&](const std::string& path, int depth, int& current_row)
                     {
                         if (current_row >= max_content_rows + scroll_offset) return;
 
-                        // Only display if within scroll view
                         if (current_row >= scroll_offset)
                         {
                             std::string display_path = path.substr(path.find_last_of('/') + 1);
@@ -152,8 +148,6 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                                 "%s%s", std::string(depth * 2, ' ').c_str(), display_path.c_str());
                         }
                         current_row++;
-
-                        // Display files in this directory
                         for (const auto& file : dir_structure[path])
                         {
                             if (current_row >= max_content_rows + scroll_offset) continue;
@@ -165,8 +159,6 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                             }
                             current_row++;
                         }
-
-                        // Display subdirectories
                         for (const auto& entry : dir_structure)
                         {
                             if (entry.first.find(path + '/') == 0 &&
@@ -187,14 +179,10 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                 }
 
             }
-
-            // Instructions at the bottom
             mvwprintw(preview, height - 2, 1, "ENTER: Accept  Q: Quit  UP/DOWN: Scroll");
 
             wrefresh(content);
             wrefresh(preview);
-
-            // Handle user input
             int ch = wgetch(preview);
             switch (ch)
             {
@@ -221,6 +209,10 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                 delwin(preview);
                 touchwin(parent);
                 wrefresh(parent);
+                refresh();
+
+                renderWindows(lwin, rwin);
+
                 return false;
             default:
                 continue;
@@ -279,7 +271,7 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
     int path_win_y = LINES - path_win_height;
     WINDOW* path_win = newwin(path_win_height, COLS, path_win_y, 0);
 
-    // Create main dialog window with consistent size
+    // windows auto-size
     int dialog_height = static_cast<int>(LINES * WINDOW_SIZE_RATIO);
     int dialog_width = static_cast<int>(COLS * WINDOW_SIZE_RATIO);
     int dialog_y = (LINES - dialog_height) / 2;
@@ -380,11 +372,11 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
 
         if (only_dirs)
         {
-            mvwprintw(dialog, 1, 2, "Select a download directory (E to move into, ENTER to select, Q to quit)");
+            mvwprintw(dialog, 1, 2, "Select a download dir (E:move, Enter:select, Q:quit)");
         }
-        else 
+        else
         {
-            mvwprintw(dialog, 1, 2, "Select a .torrent file (ENTER to select, Q to quit)");
+            mvwprintw(dialog, 1, 2, "Select a torrent file (ENTER:select, Q:quit)");
         }
 
         for (int i = 0; i < numRows; ++i)
@@ -470,8 +462,8 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
 
                         bool accepted = showTorrentPreview(parent, path.string());
 
-                        touchwin(stdscr);
-                        refresh();
+                        //touchwin(stdscr);
+                        //refresh();
 
                         if (accepted)
                         {
@@ -525,7 +517,8 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
     }
 }
 
-int main() {
+int main()
+{
     setlocale(LC_ALL, "");
     setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
@@ -537,8 +530,8 @@ int main() {
     printf("\033[?7l");
     fflush(stdout);
 
-    WINDOW* lwin = newwin(LINES - 4, COLS / 2, 2, 1);
-    WINDOW* rwin = newwin(LINES - 4, COLS / 2 - 1, 2, COLS / 2 + 1);
+    lwin = newwin(LINES - 4, COLS / 2, 2, 1);
+    rwin = newwin(LINES - 4, COLS / 2 - 1, 2, COLS / 2 + 1);
     keypad(lwin, TRUE);
     keypad(rwin, TRUE);
 
@@ -583,7 +576,7 @@ int main() {
                         {
                             lt::add_torrent_params atp;
                             atp.ti = std::make_shared<lt::torrent_info>(path);
-                            atp.save_path = ".";
+                            atp.save_path = downDir;
                             torrent_session.add_torrent(atp);
                         }
                         catch (const std::exception& e)
@@ -597,8 +590,8 @@ int main() {
                 }
                 else if (left_win.selected == 1)
                 {
-                    std::string downDir = fileDialog(stdscr, ".", true);
-                    mvprintw(3, 3, "%s", downDir.c_str());
+                    downDir = fileDialog(stdscr, ".", true);
+                    renderWindows(lwin, rwin);
                     refresh();
                 }
                 else if (left_win.selected == 2)
