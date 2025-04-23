@@ -1,20 +1,20 @@
 #include "ufo_torrent.h"
+#include <algorithm>
 #include <iostream>
 #include <ncurses.h>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <algorithm>
 
-#include "../includes/prettyPrinter.h"
+#include "../includes/createHash.h"
 #include "../includes/decode.h"
-#include "../includes/torrentFile.h"
 #include "../includes/encode.h"
 #include "../includes/fileUtils.h"
-#include "../includes/createHash.h"
+#include "../includes/prettyPrinter.h"
+#include "../includes/torrentFile.h"
+#include "ncurses_utils.h"
 #include <boost/locale.hpp>
 #include <filesystem>
-#include "ncurses_utils.h"
 
 using namespace bencode;
 using namespace Torrent;
@@ -25,15 +25,14 @@ namespace fs = std::filesystem;
 
 std::set<std::string> selectedTorrents;
 std::set<TorrentFile> actualyTorrent;
-int right_win_selected = 0;  // Track selected item in right window
-int left_win_selected = 0;   // Track selected item in left window
-const char* left_choices[] = { "Add Torrent", "Exit" };
+int right_win_selected = 0; // Track selected item in right window
+int left_win_selected = 0;  // Track selected item in left window
+const char* left_choices[] = {"Add Torrent", "Exit"};
 
-std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
+std::string fileDialog(WINDOW* win, const std::string& startDir = ".")
+{
     std::string currentDir = startDir;
-    if (startDir == ".") {
-        currentDir = fs::current_path().string();
-    }
+    if (startDir == ".") { currentDir = fs::current_path().string(); }
 
     std::vector<std::string> files;
     int selected = 0;
@@ -41,27 +40,31 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
     const int MAX_VISIBLE_LINES = 7;
     const int PADDING = 3;
 
-    while (true) {
+    while (true)
+    {
         files.clear();
         files.push_back("..");
 
-        for (const auto& entry : fs::directory_iterator(currentDir)) {
-            try {
+        for (const auto& entry : fs::directory_iterator(currentDir))
+        {
+            try
+            {
                 files.push_back(entry.path().filename().string());
             }
-            catch (const fs::filesystem_error& e) {
-                if (e.code() == std::errc::permission_denied) {
-                    continue;
-                }
+            catch (const fs::filesystem_error& e)
+            {
+                if (e.code() == std::errc::permission_denied) { continue; }
             }
         }
 
         int startIndex = 0;
-        if (selected >= MAX_VISIBLE_LINES) {
+        if (selected >= MAX_VISIBLE_LINES)
+        {
             startIndex = selected - MAX_VISIBLE_LINES + 1;
         }
 
-        int numRows = std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
+        int numRows =
+            std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
         numRows = std::max(numRows, 3);
 
         werase(win);
@@ -72,22 +75,22 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
 
         int currDirLines = (22 + currentDir.size()) / 40;
 
-        for (int i = 0; i < numRows; ++i) {
+        for (int i = 0; i < numRows; ++i)
+        {
             int fileIndex = startIndex + i;
-            if (fileIndex < (int)files.size()) {
-                if (fileIndex == selected) {
-                    wattron(win, A_REVERSE);
-                }
-                mvwprintw(win, i + 3 + currDirLines, PADDING, "%s", files[fileIndex].c_str());
-                if (fileIndex == selected) {
-                    wattroff(win, A_REVERSE);
-                }
+            if (fileIndex < (int)files.size())
+            {
+                if (fileIndex == selected) { wattron(win, A_REVERSE); }
+                mvwprintw(win, i + 3 + currDirLines, PADDING, "%s",
+                          files[fileIndex].c_str());
+                if (fileIndex == selected) { wattroff(win, A_REVERSE); }
             }
         }
         wrefresh(win);
 
         int key = wgetch(win);
-        switch (key) {
+        switch (key)
+        {
         case KEY_UP:
             if (selected > 0) --selected;
             break;
@@ -95,24 +98,27 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
             if ((size_t)selected < files.size() - 1) ++selected;
             break;
         case 10: // Enter key
-            if (files[selected] == "..") {
+            if (files[selected] == "..")
+            {
                 auto parentDir = fs::path(currentDir).parent_path();
-                if (fs::exists(parentDir) && fs::is_directory(parentDir)) {
+                if (fs::exists(parentDir) && fs::is_directory(parentDir))
+                {
                     currentDir = parentDir.string();
                     selected = 0;
                 }
             }
-            else if (fs::is_directory(currentDir + "/" + files[selected])) {
+            else if (fs::is_directory(currentDir + "/" + files[selected]))
+            {
                 currentDir += "/" + files[selected];
                 selected = 0;
             }
-            else if (files[selected].find(".torrent") != std::string::npos) {
+            else if (files[selected].find(".torrent") != std::string::npos)
+            {
                 return currentDir + "/" + files[selected];
             }
             break;
         case 'q':
-        case 'Q':
-            return "";
+        case 'Q': return "";
         case KEY_BACKSPACE:
         case 127:
             currentDir = fs::path(currentDir).parent_path().string();
@@ -122,32 +128,31 @@ std::string fileDialog(WINDOW* win, const std::string& startDir = ".") {
     }
 }
 
-void refresh_right_win(WINDOW* right_win) {
+void refresh_right_win(WINDOW* right_win)
+{
     werase(right_win);
     box(right_win, 0, 0);
-    mvwprintw(right_win, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
+    mvwprintw(right_win, 1, 2, "Active Torrents (%zu)",
+              selectedTorrents.size());
 
     // Adjust selection if out of bounds
-    if (!selectedTorrents.empty()) {
-        right_win_selected = std::min(right_win_selected, (int)selectedTorrents.size() - 1);
+    if (!selectedTorrents.empty())
+    {
+        right_win_selected =
+            std::min(right_win_selected, (int)selectedTorrents.size() - 1);
     }
-    else {
-        right_win_selected = 0;
-    }
+    else { right_win_selected = 0; }
 
     int row = 3;
     int index = 0;
-    for (const auto& torrent : selectedTorrents) {
+    for (const auto& torrent : selectedTorrents)
+    {
         std::string displayName = fs::path(torrent).filename().string();
 
         // Highlight selected item
-        if (index == right_win_selected) {
-            wattron(right_win, A_REVERSE);
-        }
+        if (index == right_win_selected) { wattron(right_win, A_REVERSE); }
         mvwprintw(right_win, row++, 2, "%s", displayName.c_str());
-        if (index == right_win_selected) {
-            wattroff(right_win, A_REVERSE);
-        }
+        if (index == right_win_selected) { wattroff(right_win, A_REVERSE); }
 
         index++;
         if (row >= getmaxy(right_win) - 1) break;
@@ -155,32 +160,33 @@ void refresh_right_win(WINDOW* right_win) {
     wrefresh(right_win);
 }
 
-void refresh_left_win(WINDOW* left_win) {
+void refresh_left_win(WINDOW* left_win)
+{
     werase(left_win);
     box(left_win, 0, 0);
     mvwprintw(left_win, 1, 2, "Main Menu");
 
-    for (int i = 0; i < 2; ++i) {
-        if (i == left_win_selected) {
-            wattron(left_win, A_REVERSE);
-        }
+    for (int i = 0; i < 2; ++i)
+    {
+        if (i == left_win_selected) { wattron(left_win, A_REVERSE); }
         mvwprintw(left_win, i + 3, 2, "%s", left_choices[i]);
-        if (i == left_win_selected) {
-            wattroff(left_win, A_REVERSE);
-        }
+        if (i == left_win_selected) { wattroff(left_win, A_REVERSE); }
     }
     wrefresh(left_win);
 }
 
-void redraw_interface(WINDOW* left_win, WINDOW* right_win) {
+void redraw_interface(WINDOW* left_win, WINDOW* right_win)
+{
     refresh();
     clear();
     refresh_left_win(left_win);
     refresh_right_win(right_win);
 }
 
-int main() {
-    setenv("TERMINFO", "/usr/share/terminfo", 1);
+int main()
+{
+    setenv("TERMINFO","/usr/share/terminfo", 1);
+
     setlocale(LC_ALL, "");
     initscr();
     cbreak();
@@ -201,24 +207,31 @@ int main() {
     bool in_right_pane = false;
 
     int key;
-    while ((key = wgetch(active_win)) != KEY_F(1)) {
-        switch (key) {
+    while ((key = wgetch(active_win)) != KEY_F(1))
+    {
+        switch (key)
+        {
         case KEY_DOWN:
-            if (in_right_pane && !selectedTorrents.empty()) {
-                right_win_selected = std::min(right_win_selected + 1, (int)selectedTorrents.size() - 1);
+            if (in_right_pane && !selectedTorrents.empty())
+            {
+                right_win_selected = std::min(right_win_selected + 1,
+                                              (int)selectedTorrents.size() - 1);
                 refresh_right_win(right_win);
             }
-            else if (!in_right_pane) {
+            else if (!in_right_pane)
+            {
                 left_win_selected = std::min(left_win_selected + 1, 1);
                 refresh_left_win(left_win);
             }
             break;
         case KEY_UP:
-            if (in_right_pane && !selectedTorrents.empty()) {
+            if (in_right_pane && !selectedTorrents.empty())
+            {
                 right_win_selected = std::max(right_win_selected - 1, 0);
                 refresh_right_win(right_win);
             }
-            else if (!in_right_pane) {
+            else if (!in_right_pane)
+            {
                 left_win_selected = std::max(left_win_selected - 1, 0);
                 refresh_left_win(left_win);
             }
@@ -229,7 +242,8 @@ int main() {
             refresh_left_win(left_win);
             break;
         case KEY_RIGHT:
-            if (!selectedTorrents.empty()) {
+            if (!selectedTorrents.empty())
+            {
                 active_win = right_win;
                 in_right_pane = true;
                 refresh_right_win(right_win);
@@ -241,8 +255,10 @@ int main() {
             {
                 // Handle right pane selection
             }
-            else if (!in_right_pane) {
-                switch (left_win_selected) {
+            else if (!in_right_pane)
+            {
+                switch (left_win_selected)
+                {
                 case 0: // Add Torrent
                 {
                     WINDOW* fileWin = newwin(14, 50, 5, 10);
@@ -254,8 +270,10 @@ int main() {
                     delwin(fileWin);
                     delwin(truefileWin);
 
-                    if (!selectedFile.empty()) {
-                        TorrentFile file = parseTorrentFile(Decoder::decode(read(selectedFile)));
+                    if (!selectedFile.empty())
+                    {
+                        TorrentFile file = parseTorrentFile(
+                            Decoder::decode(read(selectedFile)));
                         selectedTorrents.insert(selectedFile);
                         refresh_right_win(right_win);
                     }
