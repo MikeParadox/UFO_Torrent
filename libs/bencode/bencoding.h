@@ -1,12 +1,9 @@
 /**
-* @file      bencoding.h
-* @copyright (c) 2014 by Petr Zemek (s3rvac@gmail.com) and contributors
-* @license   BSD, see the @c LICENSE file for more details
-* @brief     A header file for the whole bencoding library.
-*
-* This header file includes all the header files of the library.
-*/
-
+ * @file bencoding.h
+ * @brief Main header for bencoding library.
+ * @details Includes all necessary headers for working with bencoded data.
+ * @note This is the main include file that should be included by users of the library.
+ */
 #ifndef BENCODING_BENCODING_H
 #define BENCODING_BENCODING_H
 

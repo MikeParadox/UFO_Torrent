@@ -1,0 +1,48 @@
+.TH UFO-TORRENT 1 "2024-05-20" "v0.1" "Torrent Client Manual"
+.SH NAME
+UFO-TORRENT \- Torrent client that allows you to download torrent files.
+.SH SYNOPSIS
+.B UFO-TORRENT
+[\fIADD TORRENT\fR] [\fISELECT DOWNDIR\fR] [\fIEXIT\fR]
+.SH "GUI"
+The client's main menu is divided into two parts - Main Menu and Active Torrents ().
+.RE
+.TP
+.IP \(bu 3 
+Main Menu (\fBLeft Side\fR):
+The left part, called the Main Menu. It was created for the user to navigate through the client. It has 3 buttons: "Add Torrent", "Select DownDir" and "Exit".
+.IP \(bu 3 
+Active Torrents () (\fBRight Side\fR):
+The right part, called the Active Torrents. Created to display a list of files previously selected by the user. The number of selected files is shown in parentheses in the header.
+
+.SH "BUTTONS DESCRIPTION"
+
+.B Main Menu:
+.RS
+.IP \(bu 3
+\fBAdd Torrent\fR: Opens a menu with a specific file selection. Navigation is done using the keyboard buttons (Up, Down). The path you are currently in is written at the bottom. The menu does not show any files except .torrent and folders.
+.IP \(bu 3
+\fBSelect DownDir\fR: Selecting a directory to upload downloaded files to. (<under development>)
+.IP \(bu 3
+\fBExit\fR: Terminates the program. Exits the application.
+.RE
+
+.TP
+.B Active Torrents ():
+
+Shows a list of torrents that were added by the user. The number of files added is shown in parentheses in the header. Clicking on the file shows the path to the file.
+.RE
+.RS
+.SH EXAMPLES
+.LP
+How do I select the file of interest and add it to "Active Torrents ()"?
+
+The application is shown below: Main Menu -> Add Torrent -> /example.torrent -> Check file information -> ENTER for accept.
+.PP
+.nf
+.RS
+ufo-torrent ~/downloads/ubuntu.torrent
+.RE
+.fi
+.SH SEE ALSO
+.BR qbittorrent (1), \fBtransmission-gtk\fR(1)
