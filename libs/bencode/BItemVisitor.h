@@ -1,40 +1,47 @@
 /**
-* @file      BItemVisitor.h
-* @copyright (c) 2014 by Petr Zemek (s3rvac@gmail.com) and contributors
-* @license   BSD, see the @c LICENSE file for more details
-* @brief     Base class for all visitors of the BItem subclasses.
-*/
-
+ * @file BItemVisitor.h
+ * @brief Visitor pattern base class for BItem hierarchy.
+ * @details Implements the Visitor design pattern for bencoded data structures.
+ */
 #ifndef BENCODING_BITEMVISITOR_H
 #define BENCODING_BITEMVISITOR_H
 
 namespace bencoding {
 
-class BDictionary;
-class BInteger;
-class BList;
-class BString;
+    class BDictionary;
+    class BInteger;
+    class BList;
+    class BString;
 
-/**
-* @brief Base class for all visitors of the BItem subclasses.
-*
-* Implements the <a
-* href="http://en.wikipedia.org/wiki/Visitor_design_pattern">Visitor design
-* pattern</a>.
-*/
-class BItemVisitor {
-public:
-	virtual ~BItemVisitor();
+    /**
+     * @class BItemVisitor
+     * @brief Abstract visitor for BItem hierarchy.
+     *
+     * Example visitor implementation:
+     * @code
+     * class MyVisitor : public BItemVisitor {
+     * public:
+     *     void visit(BDictionary *d) override { ... }
+     *     void visit(BInteger *i) override { ... }
+     *     // ... other visit methods
+     * };
+     * @endcode
+     */
+    class BItemVisitor {
+    public:
+        virtual ~BItemVisitor();
 
-	virtual void visit(BDictionary *bDictionary) = 0;
-	virtual void visit(BInteger *bInteger) = 0;
-	virtual void visit(BList *blist) = 0;
-	virtual void visit(BString *bString) = 0;
+        /// @name Visit Methods
+        /// @{
+        virtual void visit(BDictionary* bDictionary) = 0;
+        virtual void visit(BInteger* bInteger) = 0;
+        virtual void visit(BList* blist) = 0;
+        virtual void visit(BString* bString) = 0;
+        /// @}
 
-protected:
-	BItemVisitor();
-};
+    protected:
+        BItemVisitor();
+    };
 
 } // namespace bencoding
-
 #endif
