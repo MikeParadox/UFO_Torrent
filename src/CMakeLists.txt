@@ -1,9 +1,4 @@
-﻿
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
-set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-set(Boost_USE_STATIC_LIBS ON)
-
-find_package(LibtorrentRasterbar REQUIRED)
+﻿find_package(LibtorrentRasterbar REQUIRED)
 include_directories(${LibtorrentRasterbar_INCLUDE_DIRS})
 
 find_package(Curses REQUIRED)
@@ -16,7 +11,7 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
 
-add_library(Testing STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
+add_library(Source STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
         ./bencode/decode.cpp
         ./bencode/prettyPrinter.cpp
         ./bencode/encode.cpp
@@ -47,14 +42,6 @@ add_library(Testing STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
 
 add_executable(main main.cpp)
 
-# Force static linking everywhere
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
-set(CMAKE_USE_SYSTEM_CURL OFF)
-set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-
 # For fully static linking, we need to link against static versions of system libraries
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 
@@ -64,7 +51,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-lib
 #find_package(Boost 1.45.0 COMPONENTS system filesystem)
 
 target_link_libraries(main PRIVATE
-        Testing
+        Source
         ${CURSES_LIBRARIES}
         ${Boost_LIBRARIES}
         ${CURL_LIBRARIES}
