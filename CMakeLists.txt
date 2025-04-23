@@ -5,7 +5,7 @@ project("ufo_torrent"
         LANGUAGES CXX)
 
 # set(CMAKE_CXX_COMPILER "/usr/bin/clang++")                
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-14")
+#set(CMAKE_CXX_COMPILER "/usr/bin/g++-14")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,5 +33,5 @@ include_directories(libs/bencode)
 add_subdirectory("src")
 add_subdirectory("tests")
 
-target_compile_options(main PRIVATE
-        -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses)
+#target_compile_options(main PRIVATE
+#       -g -ggdb -Werror -Wall -Wpedantic -Wno-parentheses)

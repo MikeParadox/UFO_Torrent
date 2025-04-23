@@ -55,5 +55,5 @@ target_link_libraries(main PRIVATE
         ${CURSES_LIBRARIES}
         ${Boost_LIBRARIES}
         ${CURL_LIBRARIES}
-        #        LibtorrentRasterbar::torrent-rasterbar
+        LibtorrentRasterbar::torrent-rasterbar
 )
