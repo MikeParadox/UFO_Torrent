@@ -65,7 +65,40 @@ namespace bencoding {
     private:
         Decoder();
 
-        // Decoding helper methods...
+        void readExpectedChar(std::istream& input, char expected_char) const;
+
+        /// @name Integer Decoding
+        /// @{
+        std::unique_ptr<BDictionary> decodeDictionary(std::istream& input);
+        std::unique_ptr<BDictionary> decodeDictionaryItemsIntoDictionary(
+            std::istream& input);
+        std::shared_ptr<BString> decodeDictionaryKey(std::istream& input);
+        std::unique_ptr<BItem> decodeDictionaryValue(std::istream& input);
+        /// @}
+
+        /// @name Integer Decoding
+        /// @{
+        std::unique_ptr<BInteger> decodeInteger(std::istream& input) const;
+        std::string readEncodedInteger(std::istream& input) const;
+        std::unique_ptr<BInteger> decodeEncodedInteger(
+            const std::string& encodedInteger) const;
+        /// @}
+
+        /// @name List Decoding
+        /// @{
+        std::unique_ptr<BList> decodeList(std::istream& input);
+        std::unique_ptr<BList> decodeListItemsIntoList(std::istream& input);
+        /// @}
+
+        /// @name String Decoding
+        /// @{
+        std::unique_ptr<BString> decodeString(std::istream& input) const;
+        std::string::size_type readStringLength(std::istream& input) const;
+        std::string readStringOfGivenLength(std::istream& input,
+            std::string::size_type length) const;
+        /// @}
+
+        void validateInputDoesNotContainUndecodedCharacters(std::istream& input);
     };
 
     /// @name Convenience Functions
