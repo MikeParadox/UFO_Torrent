@@ -17,24 +17,29 @@
 #include "BString.h"
 #include "Utils.h"
 
-namespace bencoding {
-
+namespace bencoding
+{
 /**
 * @brief Constructs a new exception with the given message.
 */
-DecodingError::DecodingError(const std::string &what):
-	std::runtime_error(what) {}
+DecodingError::DecodingError(const std::string& what):
+    std::runtime_error(what)
+{
+}
 
 /**
 * @brief Constructs a decoder.
 */
-Decoder::Decoder() {}
+Decoder::Decoder()
+{
+}
 
 /**
 * @brief Creates a new decoder.
 */
-std::unique_ptr<Decoder> Decoder::create() {
-	return std::unique_ptr<Decoder>(new Decoder());
+std::unique_ptr<Decoder> Decoder::create()
+{
+    return std::unique_ptr<Decoder>(new Decoder());
 }
 
 /**
@@ -43,11 +48,12 @@ std::unique_ptr<Decoder> Decoder::create() {
 * If there are some characters left after the decoded data, this function
 * throws DecodingError.
 */
-std::unique_ptr<BItem> Decoder::decode(const std::string &data) {
-	std::istringstream input(data);
-	auto decodedData = decode(input);
-	validateInputDoesNotContainUndecodedCharacters(input);
-	return decodedData;
+std::unique_ptr<BItem> Decoder::decode(const std::string& data)
+{
+    std::istringstream input(data);
+    auto decodedData = decode(input);
+    validateInputDoesNotContainUndecodedCharacters(input);
+    return decodedData;
 }
 
 /**
@@ -57,43 +63,42 @@ std::unique_ptr<BItem> Decoder::decode(const std::string &data) {
 * input, i.e. they are not read. This behavior differs for the overload of
 * decode() that takes @c std::string as the input.
 */
-std::unique_ptr<BItem> Decoder::decode(std::istream &input) {
-	switch (input.peek()) {
-		case 'd':
-			return decodeDictionary(input);
-		case 'i':
-			return decodeInteger(input);
-		case 'l':
-			return decodeList(input);
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			return decodeString(input);
-		default:
-			throw DecodingError(std::string("unexpected character: '") +
-				static_cast<char>(input.peek()) + "'");
-	}
+std::unique_ptr<BItem> Decoder::decode(std::istream& input)
+{
+    switch (input.peek())
+    {
+    case 'd': return decodeDictionary(input);
+    case 'i': return decodeInteger(input);
+    case 'l': return decodeList(input);
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9': return decodeString(input);
+    default: throw DecodingError(std::string("unexpected character: '") +
+                                 static_cast<char>(input.peek()) + "'");
+    }
 
-	assert(false && "should never happen");
-	return std::unique_ptr<BItem>();
+    assert(false && "should never happen");
+    return std::unique_ptr<BItem>();
 }
 
 /**
 * @brief Reads @a expected_char from @a input and discards it.
 */
-void Decoder::readExpectedChar(std::istream &input, char expected_char) const {
-	int c = input.get();
-	if (c != expected_char) {
-		throw DecodingError(std::string("expected '") + expected_char +
-			"', got '" + static_cast<char>(c) + "'");
-	}
+void Decoder::readExpectedChar(std::istream& input, char expected_char) const
+{
+    int c = input.get();
+    if (c != expected_char)
+    {
+        throw DecodingError(std::string("expected '") + expected_char +
+                            "', got '" + static_cast<char>(c) + "'");
+    }
 }
 
 /**
@@ -117,11 +122,12 @@ void Decoder::readExpectedChar(std::istream &input, char expected_char) const {
 * href="https://wiki.theory.org/BitTorrentSpecification#Bencoding">specification</a>,
 * they must be sorted).
 */
-std::unique_ptr<BDictionary> Decoder::decodeDictionary(std::istream &input) {
-	readExpectedChar(input, 'd');
-	auto bDictionary = decodeDictionaryItemsIntoDictionary(input);
-	readExpectedChar(input, 'e');
-	return bDictionary;
+std::unique_ptr<BDictionary> Decoder::decodeDictionary(std::istream& input)
+{
+    readExpectedChar(input, 'd');
+    auto bDictionary = decodeDictionaryItemsIntoDictionary(input);
+    readExpectedChar(input, 'e');
+    return bDictionary;
 }
 
 /**
@@ -129,36 +135,41 @@ std::unique_ptr<BDictionary> Decoder::decodeDictionary(std::istream &input) {
 *        that dictionary.
 */
 std::unique_ptr<BDictionary> Decoder::decodeDictionaryItemsIntoDictionary(
-		std::istream &input) {
-	auto bDictionary = BDictionary::create();
-	while (input && input.peek() != 'e') {
-		std::shared_ptr<BString> key(decodeDictionaryKey(input));
-		std::shared_ptr<BItem> value(decodeDictionaryValue(input));
-		(*bDictionary)[key] = value;
-	}
-	return bDictionary;
+    std::istream& input)
+{
+    auto bDictionary = BDictionary::create();
+    while (input && input.peek() != 'e')
+    {
+        std::shared_ptr<BString> key(decodeDictionaryKey(input));
+        std::shared_ptr<BItem> value(decodeDictionaryValue(input));
+        (*bDictionary)[key] = value;
+    }
+    return bDictionary;
 }
 
 /**
 * @brief Decodes a dictionary key from @a input.
 */
-std::shared_ptr<BString> Decoder::decodeDictionaryKey(std::istream &input) {
-	std::shared_ptr<BItem> key(decode(input));
-	// A dictionary key has to be a string.
-	std::shared_ptr<BString> keyAsBString(key->as<BString>());
-	if (!keyAsBString) {
-		throw DecodingError(
-			"found a dictionary key that is not a bencoded string"
-		);
-	}
-	return keyAsBString;
+std::shared_ptr<BString> Decoder::decodeDictionaryKey(std::istream& input)
+{
+    std::shared_ptr<BItem> key(decode(input));
+    // A dictionary key has to be a string.
+    std::shared_ptr<BString> keyAsBString(key->as<BString>());
+    if (!keyAsBString)
+    {
+        throw DecodingError(
+            "found a dictionary key that is not a bencoded string"
+            );
+    }
+    return keyAsBString;
 }
 
 /**
 * @brief Decodes a dictionary value from @a input.
 */
-std::unique_ptr<BItem> Decoder::decodeDictionaryValue(std::istream &input) {
-	return decode(input);
+std::unique_ptr<BItem> Decoder::decodeDictionaryValue(std::istream& input)
+{
+    return decode(input);
 }
 
 /**
@@ -179,42 +190,49 @@ std::unique_ptr<BItem> Decoder::decodeDictionaryValue(std::istream &input) {
 * href="https://wiki.theory.org/BitTorrentSpecification#Bencoding">
 * specification</a>).
 */
-std::unique_ptr<BInteger> Decoder::decodeInteger(std::istream &input) const {
-	return decodeEncodedInteger(readEncodedInteger(input));
+std::unique_ptr<BInteger> Decoder::decodeInteger(std::istream& input) const
+{
+    return decodeEncodedInteger(readEncodedInteger(input));
 }
 
 /**
 * @brief Reads an encoded integer from @a input.
 */
-std::string Decoder::readEncodedInteger(std::istream &input) const {
-	// See the description of decodeInteger() for the format and example.
-	std::string encodedInteger;
-	bool encodedIntegerReadCorrectly = readUntil(input, encodedInteger, 'e');
-	if (!encodedIntegerReadCorrectly) {
-		throw DecodingError("error during the decoding of an integer near '" +
-			encodedInteger + "'");
-	}
+std::string Decoder::readEncodedInteger(std::istream& input) const
+{
+    // See the description of decodeInteger() for the format and example.
+    std::string encodedInteger;
+    bool encodedIntegerReadCorrectly = readUntil(input, encodedInteger, 'e');
+    if (!encodedIntegerReadCorrectly)
+    {
+        throw DecodingError("error during the decoding of an integer near '" +
+                            encodedInteger + "'");
+    }
 
-	return encodedInteger;
+    return encodedInteger;
 }
 
 /**
 * @brief Decodes the given encoded integer.
 */
 std::unique_ptr<BInteger> Decoder::decodeEncodedInteger(
-		const std::string &encodedInteger) const {
-	// See the description of decodeInteger() for the format and example.
-	static const std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");//�� �� ����� ����
-	std::smatch match;
-	bool valid = std::regex_match(encodedInteger, match, integerRegex);
-	if (!valid) {
-		throw DecodingError("encountered an encoded integer of invalid format: '" +
-			encodedInteger + "'");
-	}
+    const std::string& encodedInteger) const
+{
+    // See the description of decodeInteger() for the format and example.
+    static const std::regex integerRegex("i([-+]?(0|[1-9][0-9]*))e");
+    //�� �� ����� ����
+    std::smatch match;
+    bool valid = std::regex_match(encodedInteger, match, integerRegex);
+    if (!valid)
+    {
+        throw DecodingError(
+            "encountered an encoded integer of invalid format: '" +
+            encodedInteger + "'");
+    }
 
-	BInteger::ValueType integerValue;
-	strToNum(match[1].str(), integerValue);
-	return BInteger::create(integerValue);
+    BInteger::ValueType integerValue;
+    strToNum(match[1].str(), integerValue);
+    return BInteger::create(integerValue);
 }
 
 /**
@@ -230,23 +248,26 @@ std::unique_ptr<BInteger> Decoder::decodeEncodedInteger(
 * l4:spam4:eggse represents a list containing two strings "spam" and "eggs"
 * @endcode
 */
-std::unique_ptr<BList> Decoder::decodeList(std::istream &input) {
-	readExpectedChar(input, 'l');
-	auto bList = decodeListItemsIntoList(input);
-	readExpectedChar(input, 'e');
-	return bList;
+std::unique_ptr<BList> Decoder::decodeList(std::istream& input)
+{
+    readExpectedChar(input, 'l');
+    auto bList = decodeListItemsIntoList(input);
+    readExpectedChar(input, 'e');
+    return bList;
 }
 
 /**
 * @brief Decodes items from @a input, appends them to a list, and returns that
 *        list.
 */
-std::unique_ptr<BList> Decoder::decodeListItemsIntoList(std::istream &input) {
-	auto bList = BList::create();
-	while (input && input.peek() != 'e') {
-		bList->push_back(decode(input));
-	}
-	return bList;
+std::unique_ptr<BList> Decoder::decodeListItemsIntoList(std::istream& input)
+{
+    auto bList = BList::create();
+    while (input && input.peek() != 'e')
+    {
+        bList->push_back(decode(input));
+    }
+    return bList;
 }
 
 /**
@@ -262,55 +283,68 @@ std::unique_ptr<BList> Decoder::decodeListItemsIntoList(std::istream &input) {
 * 4:test represents the string "test"
 * @endcode
 */
-std::unique_ptr<BString> Decoder::decodeString(std::istream &input) const {
-	std::string::size_type stringLength(readStringLength(input));
-	readExpectedChar(input, ':');
-	std::string str(readStringOfGivenLength(input, stringLength));
-	return BString::create(str);
+std::unique_ptr<BString> Decoder::decodeString(std::istream& input) const
+{
+    std::string::size_type stringLength(readStringLength(input));
+    readExpectedChar(input, ':');
+    std::string str(readStringOfGivenLength(input, stringLength));
+    return BString::create(str);
 }
 
 /**
 * @brief Reads the string length from @a input, validates it, and returns it.
 */
-std::string::size_type Decoder::readStringLength(std::istream &input) const {
-	std::string stringLengthInASCII;
-	bool stringLengthInASCIIReadCorrectly = readUpTo(input, stringLengthInASCII, ':');
-	if (!stringLengthInASCIIReadCorrectly) {
-		throw DecodingError("error during the decoding of a string near '" +
-			stringLengthInASCII + "'");
-	}
+std::string::size_type Decoder::readStringLength(std::istream& input) const
+{
+    std::string stringLengthInASCII;
+    bool stringLengthInASCIIReadCorrectly = readUpTo(
+        input, stringLengthInASCII, ':');
+    if (!stringLengthInASCIIReadCorrectly)
+    {
+        throw DecodingError("error during the decoding of a string near '" +
+                            stringLengthInASCII + "'");
+    }
 
-	std::string::size_type stringLength;
-	bool stringLengthIsValid = strToNum(stringLengthInASCII, stringLength);
-	if (!stringLengthIsValid) {
-		throw DecodingError("invalid string length: '" + stringLengthInASCII + "'");
-	}
+    std::string::size_type stringLength;
+    bool stringLengthIsValid = strToNum(stringLengthInASCII, stringLength);
+    if (!stringLengthIsValid)
+    {
+        throw DecodingError(
+            "invalid string length: '" + stringLengthInASCII + "'");
+    }
 
-	return stringLength;
+    return stringLength;
 }
 
 /**
 * @brief Reads a string of the given @a length from @a input and returns it.
 */
 std::string Decoder::readStringOfGivenLength(std::istream& input,
-	std::string::size_type length) const {
-	std::string str;
-	str.resize(length);
-	input.read(&str[0], length);
-	if (input.gcount() != static_cast<std::streamsize>(length)) {
-		throw DecodingError("expected " + std::to_string(length) +
-			" characters, got " + std::to_string(input.gcount()));
-	}
-	return str;
-}}
+                                             std::string::size_type length)
+const
+{
+    std::string str;
+    str.resize(length);
+    input.read(&str[0], length);
+    if (input.gcount() != static_cast<std::streamsize>(length))
+    {
+        throw DecodingError("expected " + std::to_string(length) +
+                            " characters, got " +
+                            std::to_string(input.gcount()));
+    }
+    return str;
+}
 
 /**
 * @brief Throws DecodingError if @a input has not been completely read.
 */
-void bencoding::Decoder::validateInputDoesNotContainUndecodedCharacters(std::istream &input) {
-	if (input.peek() != std::char_traits<char>::eof()) {
-		throw DecodingError("input contains undecoded characters");
-	}
+void bencoding::Decoder::validateInputDoesNotContainUndecodedCharacters(
+    std::istream& input)
+{
+    if (input.peek() != std::char_traits<char>::eof())
+    {
+        throw DecodingError("input contains undecoded characters");
+    }
 }
 
 /**
@@ -321,9 +355,10 @@ void bencoding::Decoder::validateInputDoesNotContainUndecodedCharacters(std::ist
 *
 * See Decoder::decode() for more details.
 */
-std::unique_ptr<bencoding::BItem> decode(const std::string &data) {
-	auto decoder = bencoding::Decoder::create();
-	return decoder->decode(data);
+std::unique_ptr<bencoding::BItem> decode(const std::string& data)
+{
+    auto decoder = bencoding::Decoder::create();
+    return decoder->decode(data);
 }
 
 /**
@@ -335,7 +370,12 @@ std::unique_ptr<bencoding::BItem> decode(const std::string &data) {
 *
 * See Decoder::decode() for more details.
 */
-std::unique_ptr<bencoding::BItem> decode(std::istream &input) {
-	auto decoder = bencoding::Decoder::create();
-	return decoder->decode(input);
-} // namespace bencoding
+std::unique_ptr<bencoding::BItem> decode(std::istream& input)
+{
+    auto decoder = bencoding::Decoder::create();
+    return decoder->decode(input);
+}
+
+}
+
+// namespace bencoding

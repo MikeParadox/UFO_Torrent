@@ -38,14 +38,24 @@ COPY ./libs ./libs
 COPY ./tests ./tests
 COPY ./includes ./includes
 COPY ./src ./src
+COPY ./torrent ./ufo-torrent
 
 # ---------------------------------------------------
 
-RUN cmake -G "Ninja" -B ./build/debug -S .
+RUN cmake -G "Ninja" -B ./build/release -S . -DCMAKE_BUILD_TYPE=Release
 RUN export TERMINFO=/usr/share/terminfo
-RUN #ninja -C build/debug
+RUN ninja -C build/release
       
+# create .deb ----------------------------------------
+
+RUN cp build/release/main ufo-torrent/usr/local/bin/
+RUN mv ufo-torrent/usr/local/bin/main ufo-torrent/usr/local/bin/ufo-torrent
+RUN dpkg-deb --build ufo-torrent
+
 RUN groupadd -r sample && useradd -r -g sample sample
 USER sample
-        
-CMD ["/app/build/debug/main"]
+
+
+# ----------------------------------------------------
+
+#ENTRYPOINT ["./build/release/main"]
