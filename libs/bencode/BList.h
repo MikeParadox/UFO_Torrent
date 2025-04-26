@@ -3,7 +3,7 @@
  * @brief Representation of a bencoded list (sequence of items).
  * @details Implements a list structure for bencoded data with interface similar to std::list.
  */
-#ifndef BENCODING_BLIST_H
+#if BENCODING_BLIST_H
 #define BENCODING_BLIST_H
 
 #include <initializer_list>

@@ -34,7 +34,6 @@ RUN apt-get install -y libboost-filesystem-dev
 
 COPY ./CMakeLists.txt ./CMakeLists.txt
 COPY ./CMakeUserPresets.json ./CMakeUserPresets.json
-COPY ./docs ./docs
 COPY ./libs ./libs
 COPY ./tests ./tests
 COPY ./includes ./includes
@@ -42,11 +41,9 @@ COPY ./src ./src
 
 # ---------------------------------------------------
 
-RUN rm -fr ./build/*
-    
 RUN cmake -G "Ninja" -B ./build/debug -S .
 RUN export TERMINFO=/usr/share/terminfo
-RUN ninja -C build/debug
+RUN #ninja -C build/debug
       
 RUN groupadd -r sample && useradd -r -g sample sample
 USER sample
