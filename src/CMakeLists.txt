@@ -42,8 +42,7 @@ add_library(Source STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
 
 add_executable(main main.cpp)
 
-# For fully static linking, we need to link against static versions of system libraries
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 
 # If you want completely static (including libc), use:
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")

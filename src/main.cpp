@@ -37,7 +37,8 @@ std::set<std::string> selectedTorrents;
 std::string downDir = ".";
 WINDOW* lwin;
 WINDOW* rwin;
-const std::vector<std::string> left_items = { "Add Torrent", "Select DownDir", "Exit" };
+const std::vector<std::string> left_items = {"Add Torrent", "Select DownDir",
+                                             "Exit"};
 
 lt::session torrent_session;
 const float WINDOW_SIZE_RATIO = 0.7f; // Consistent size for both dialogs
@@ -52,9 +53,11 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
     int max_width_l = getmaxx(lwin) - 4;
     for (size_t i = 0; i < left_items.size(); ++i)
     {
-        if (left_win.active && i == static_cast<size_t>(left_win.selected)) wattron(lwin, A_REVERSE);
+        if (left_win.active && i == static_cast<size_t>(left_win.selected))
+            wattron(lwin, A_REVERSE);
         mvwprintw(lwin, i + 3, 2, "%.*s", max_width_l, left_items[i].c_str());
-        if (left_win.active && i == static_cast<size_t>(left_win.selected)) wattroff(lwin, A_REVERSE);
+        if (left_win.active && i == static_cast<size_t>(left_win.selected))
+            wattroff(lwin, A_REVERSE);
     }
 
     box(rwin, 0, 0);
@@ -66,9 +69,11 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
     {
         if (row >= getmaxy(rwin) - 2) break;
         std::string name = fs::path(torrent).filename().string();
-        if (right_win.active && i == right_win.selected) wattron(rwin, A_REVERSE);
+        if (right_win.active && i == right_win.selected)
+            wattron(rwin, A_REVERSE);
         mvwprintw(rwin, row++, 2, "%.*s", max_width_r, name.c_str());
-        if (right_win.active && i == right_win.selected) wattroff(rwin, A_REVERSE);
+        if (right_win.active && i == right_win.selected)
+            wattroff(rwin, A_REVERSE);
         i++;
     }
 
@@ -119,16 +124,20 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
             {
                 mvwprintw(content, row++, 1, "Files:");
 
-                needs_scrolling = (file.info.files.size() > static_cast<size_t>(max_content_rows));
+                needs_scrolling = (
+                    file.info.files.size() > static_cast<size_t>(
+                        max_content_rows));
 
-                std::map<std::string, std::vector<std::pair<std::string, unsigned long long>>> dir_structure;
+                std::map<std::string, std::vector<std::pair<
+                             std::string, unsigned long long>>> dir_structure;
                 for (const auto& fileInfo : file.info.files)
                 {
                     std::string current_path;
                     for (size_t i = 0; i < fileInfo.path.size() - 1; i++)
                     {
-                        current_path += (current_path.empty() ? "" : "/") + fileInfo.path[i];
-                        dir_structure[current_path]; 
+                        current_path += (current_path.empty() ? "" : "/") +
+                            fileInfo.path[i];
+                        dir_structure[current_path];
                     }
                     if (!fileInfo.path.empty())
                     {
@@ -136,38 +145,45 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                             fileInfo.path.back(), fileInfo.length);
                     }
                 }
-                std::function<void(const std::string&, int, int&)> display_tree =
+                std::function<void(const std::string&, int, int&)> display_tree
+                    =
                     [&](const std::string& path, int depth, int& current_row)
-                    {
-                        if (current_row >= max_content_rows + scroll_offset) return;
+                {
+                    if (current_row >= max_content_rows + scroll_offset) return;
 
+                    if (current_row >= scroll_offset)
+                    {
+                        std::string display_path = path.substr(
+                            path.find_last_of('/') + 1);
+                        mvwprintw(content, current_row - scroll_offset + 2,
+                                  1 + depth * 2,
+                                  "%s%s", std::string(depth * 2, ' ').c_str(),
+                                  display_path.c_str());
+                    }
+                    current_row++;
+                    for (const auto& file : dir_structure[path])
+                    {
+                        if (current_row >= max_content_rows + scroll_offset)
+                            continue;
                         if (current_row >= scroll_offset)
                         {
-                            std::string display_path = path.substr(path.find_last_of('/') + 1);
-                            mvwprintw(content, current_row - scroll_offset + 2, 1 + depth * 2,
-                                "%s%s", std::string(depth * 2, ' ').c_str(), display_path.c_str());
+                            mvwprintw(content, current_row - scroll_offset + 2,
+                                      1 + (depth + 1) * 2,
+                                      "%s%s (%llu)",
+                                      std::string((depth + 1) * 2, ' ').c_str(),
+                                      file.first.c_str(), file.second);
                         }
                         current_row++;
-                        for (const auto& file : dir_structure[path])
+                    }
+                    for (const auto& entry : dir_structure)
+                    {
+                        if (entry.first.find(path + '/') == 0 &&
+                            entry.first.rfind('/') == path.length())
                         {
-                            if (current_row >= max_content_rows + scroll_offset) continue;
-                            if (current_row >= scroll_offset)
-                            {
-                                mvwprintw(content, current_row - scroll_offset + 2, 1 + (depth + 1) * 2,
-                                    "%s%s (%llu)", std::string((depth + 1) * 2, ' ').c_str(),
-                                    file.first.c_str(), file.second);
-                            }
-                            current_row++;
+                            display_tree(entry.first, depth + 1, current_row);
                         }
-                        for (const auto& entry : dir_structure)
-                        {
-                            if (entry.first.find(path + '/') == 0 &&
-                                entry.first.rfind('/') == path.length())
-                            {
-                                display_tree(entry.first, depth + 1, current_row);
-                            }
-                        }
-                    };
+                    }
+                };
 
                 int current_row = 0;
                 for (const auto& entry : dir_structure)
@@ -179,21 +195,20 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                 }
 
             }
-            mvwprintw(preview, height - 2, 1, "ENTER: Accept  Q: Quit  UP/DOWN: Scroll");
+            mvwprintw(preview, height - 2, 1,
+                      "ENTER: Accept  Q: Quit  UP/DOWN: Scroll");
 
             wrefresh(content);
             wrefresh(preview);
             int ch = wgetch(preview);
             switch (ch)
             {
-            case KEY_UP:
-                if (needs_scrolling && scroll_offset > 0)
+            case KEY_UP: if (needs_scrolling && scroll_offset > 0)
                 {
                     scroll_offset--;
                 }
                 break;
-            case KEY_DOWN:
-                if (needs_scrolling)
+            case KEY_DOWN: if (needs_scrolling)
                 {
                     scroll_offset++;
                 }
@@ -204,7 +219,8 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                 touchwin(parent);
                 wrefresh(parent);
                 return true;
-            case 'q': case 'Q': // Quit
+            case 'q':
+            case 'Q': // Quit
                 delwin(content);
                 delwin(preview);
                 touchwin(parent);
@@ -214,8 +230,7 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                 renderWindows(lwin, rwin);
 
                 return false;
-            default:
-                continue;
+            default: continue;
             }
         }
     }
@@ -235,37 +250,41 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
     }
 }
 
-std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const bool& only_dirs = false)
+std::string fileDialog(WINDOW* parent, const std::string& startDir = ".",
+                       const bool& only_dirs = false)
 {
-    std::string currentDir = (startDir == ".") ? fs::current_path().string() : startDir;
+    std::string currentDir = (startDir == ".")
+                                 ? fs::current_path().string()
+                                 : startDir;
     std::vector<std::string> files;
     int selected = 0;
     std::string errorMsg;
 
-    auto calculate_path_height = [](const std::string& path, const std::string& error = "")
-        {
-            int max_width = COLS - 4;
-            int lines = 1;
-            size_t pos = 0;
+    auto calculate_path_height = [](const std::string& path,
+                                    const std::string& error = "")
+    {
+        int max_width = COLS - 4;
+        int lines = 1;
+        size_t pos = 0;
 
-            while (pos < path.length())
+        while (pos < path.length())
+        {
+            pos += max_width;
+            lines++;
+        }
+
+        if (!error.empty())
+        {
+            pos = 0;
+            while (pos < error.length())
             {
                 pos += max_width;
                 lines++;
             }
+        }
 
-            if (!error.empty())
-            {
-                pos = 0;
-                while (pos < error.length())
-                {
-                    pos += max_width;
-                    lines++;
-                }
-            }
-
-            return std::max(lines + 2, 3);
-        };
+        return std::max(lines + 2, 3);
+    };
 
     int path_win_height = calculate_path_height(currentDir);
     int path_win_y = LINES - path_win_height;
@@ -281,43 +300,45 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
     keypad(dialog, TRUE);
 
     auto refresh_path_window = [&]()
+    {
+        werase(path_win);
+        box(path_win, 0, 0);
+
+        std::string path = "Current Path: " + currentDir;
+        int max_width = COLS - 4;
+        int line = 1;
+        size_t pos = 0;
+
+        while (pos < path.length())
         {
-            werase(path_win);
-            box(path_win, 0, 0);
+            size_t end = std::min(pos + max_width, path.length());
+            mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos),
+                      path.c_str() + pos);
+            pos = end;
+        }
 
-            std::string path = "Current Path: " + currentDir;
-            int max_width = COLS - 4;
-            int line = 1;
-            size_t pos = 0;
-
-            while (pos < path.length())
+        if (!errorMsg.empty())
+        {
+            line++;
+            wattron(path_win, A_BOLD);
+            pos = 0;
+            while (pos < errorMsg.length())
             {
-                size_t end = std::min(pos + max_width, path.length());
-                mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos), path.c_str() + pos);
+                size_t end = std::min(pos + max_width, errorMsg.length());
+                mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos),
+                          errorMsg.c_str() + pos);
                 pos = end;
             }
+            wattroff(path_win, A_BOLD);
+        }
 
-            if (!errorMsg.empty())
-            {
-                line++;
-                wattron(path_win, A_BOLD);
-                pos = 0;
-                while (pos < errorMsg.length())
-                {
-                    size_t end = std::min(pos + max_width, errorMsg.length());
-                    mvwprintw(path_win, line++, 2, "%.*s", (int)(end - pos), errorMsg.c_str() + pos);
-                    pos = end;
-                }
-                wattroff(path_win, A_BOLD);
-            }
-
-            wrefresh(path_win);
-        };
+        wrefresh(path_win);
+    };
 
     while (true)
     {
         errorMsg.clear();
-        files = { ".." };
+        files = {".."};
 
         try
         {
@@ -325,7 +346,9 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
             {
                 try
                 {
-                    if (entry.is_directory() || (!only_dirs && entry.is_regular_file() && entry.path().extension() == ".torrent"))
+                    if (entry.is_directory() || (
+                            !only_dirs && entry.is_regular_file() && entry.
+                            path().extension() == ".torrent"))
                     {
                         files.push_back(entry.path().filename().string());
                     }
@@ -368,15 +391,18 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
             startIndex = selected - MAX_VISIBLE_LINES + 1;
         }
 
-        int numRows = std::min((int)files.size() - startIndex, MAX_VISIBLE_LINES);
+        int numRows = std::min((int)files.size() - startIndex,
+                               MAX_VISIBLE_LINES);
 
         if (only_dirs)
         {
-            mvwprintw(dialog, 1, 2, "Select a download dir (E:move, Enter:select, Q:quit)");
+            mvwprintw(dialog, 1, 2,
+                      "Select a download dir (E:move, Enter:select, Q:quit)");
         }
         else
         {
-            mvwprintw(dialog, 1, 2, "Select a torrent file (ENTER:select, Q:quit)");
+            mvwprintw(dialog, 1, 2,
+                      "Select a torrent file (ENTER:select, Q:quit)");
         }
 
         for (int i = 0; i < numRows; ++i)
@@ -384,9 +410,12 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
             int fileIndex = startIndex + i;
             if (fileIndex < (int)files.size())
             {
-                if (fileIndex == selected) wattron(dialog, A_REVERSE);
-                mvwprintw(dialog, 2 + i, 2, "%.*s", max_width, files[fileIndex].c_str());
-                if (fileIndex == selected) wattroff(dialog, A_REVERSE);
+                if (fileIndex == selected)
+                    wattron(dialog, A_REVERSE);
+                mvwprintw(dialog, 2 + i, 2, "%.*s", max_width,
+                          files[fileIndex].c_str());
+                if (fileIndex == selected)
+                    wattroff(dialog, A_REVERSE);
             }
         }
 
@@ -395,14 +424,12 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
         int key = wgetch(dialog);
         switch (key)
         {
-        case KEY_UP:
-            if (selected > 0) --selected;
+        case KEY_UP: if (selected > 0) --selected;
             break;
-        case KEY_DOWN:
-            if (selected < (int)files.size() - 1) ++selected;
+        case KEY_DOWN: if (selected < (int)files.size() - 1) ++selected;
             break;
-        case 'e': case 'E':
-            if (only_dirs)
+        case 'e':
+        case 'E': if (only_dirs)
             {
                 auto path = fs::path(currentDir) / files[selected];
                 try
@@ -418,7 +445,8 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
             }
             break;
         case 10:
-        { // Enter
+        {
+            // Enter
             const std::string& choice = files[selected];
             if (choice == "..")
             {
@@ -460,7 +488,8 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
                         wrefresh(path_win);
                         delwin(path_win);
 
-                        bool accepted = showTorrentPreview(parent, path.string());
+                        bool accepted = showTorrentPreview(
+                            parent, path.string());
 
                         //touchwin(stdscr);
                         //refresh();
@@ -474,7 +503,8 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
                         path_win_height = calculate_path_height(currentDir);
                         path_win_y = LINES - path_win_height;
                         path_win = newwin(path_win_height, COLS, path_win_y, 0);
-                        dialog = newwin(dialog_height, dialog_width, dialog_y, dialog_x);
+                        dialog = newwin(dialog_height, dialog_width, dialog_y,
+                                        dialog_x);
                         keypad(dialog, TRUE);
                     }
                 }
@@ -485,15 +515,16 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".", const 
             }
             break;
         }
-        case 'q': case 'Q':
-            werase(path_win);
+        case 'q':
+        case 'Q': werase(path_win);
             wrefresh(path_win);
             delwin(path_win);
             delwin(dialog);
             touchwin(parent);
             refresh();
             return "";
-        case KEY_BACKSPACE: case 127:
+        case KEY_BACKSPACE:
+        case 127:
         {
             auto parent = fs::path(currentDir).parent_path();
             if (!parent.empty())
@@ -550,28 +581,28 @@ int main()
         {
             switch (ch)
             {
-            case KEY_DOWN:
-                left_win.selected = (left_win.selected + 1) % left_items.size();
+            case KEY_DOWN: left_win.selected =
+                           (left_win.selected + 1) % left_items.size();
                 break;
-            case KEY_UP:
-                left_win.selected = (left_win.selected - 1 + left_items.size()) % left_items.size();
+            case KEY_UP: left_win.selected =
+                         (left_win.selected - 1 + left_items.size()) %
+                         left_items.size();
                 break;
-            case KEY_RIGHT:
-                if (!selectedTorrents.empty())
+            case KEY_RIGHT: if (!selectedTorrents.empty())
                 {
                     left_win.active = false;
                     right_win.active = true;
                     right_win.selected = 0;
                 }
                 break;
-            case 10:
-                if (left_win.selected == 0)
+            case 10: if (left_win.selected == 0)
                 {
                     std::string path = fileDialog(stdscr);
                     if (!path.empty())
                     {
                         selectedTorrents.insert(path);
-                        right_win.items.assign(selectedTorrents.begin(), selectedTorrents.end());
+                        right_win.items.assign(selectedTorrents.begin(),
+                                               selectedTorrents.end());
                         try
                         {
                             lt::add_torrent_params atp;
@@ -581,7 +612,8 @@ int main()
                         }
                         catch (const std::exception& e)
                         {
-                            mvprintw(LINES - 2, 0, "Failed to add torrent: %s", e.what());
+                            mvprintw(LINES - 2, 0, "Failed to add torrent: %s",
+                                     e.what());
                             clrtoeol();
                             refresh();
                         }
@@ -605,34 +637,36 @@ int main()
         {
             switch (ch)
             {
-            case KEY_LEFT:
-                left_win.active = true;
+            case KEY_LEFT: left_win.active = true;
                 right_win.active = false;
                 break;
-            case KEY_DOWN:
-                if (!right_win.items.empty())
-                    right_win.selected = (right_win.selected + 1) % right_win.items.size();
+            case KEY_DOWN: if (!right_win.items.empty())
+                    right_win.selected =
+                        (right_win.selected + 1) % right_win.items.size();
                 break;
-            case KEY_UP:
-                if (!right_win.items.empty())
-                    right_win.selected = (right_win.selected - 1 + right_win.items.size()) % right_win.items.size();
+            case KEY_UP: if (!right_win.items.empty())
+                    right_win.selected =
+                        (right_win.selected - 1 + right_win.items.size()) %
+                        right_win.items.size();
                 break;
-            case 10:
-                if (!right_win.items.empty())
+            case 10: if (!right_win.items.empty())
                 {
-                    std::string selected = *std::next(selectedTorrents.begin(), right_win.selected);
+                    std::string selected = *std::next(
+                        selectedTorrents.begin(), right_win.selected);
                     mvprintw(LINES - 1, 0, "Selected: %s", selected.c_str());
                     clrtoeol();
                     refresh();
                 }
                 break;
-            case 'r':
-                if (!right_win.items.empty())
+            case 'r': if (!right_win.items.empty())
                 {
-                    auto it = std::next(selectedTorrents.begin(), right_win.selected);
+                    auto it = std::next(selectedTorrents.begin(),
+                                        right_win.selected);
                     selectedTorrents.erase(it);
-                    right_win.items.assign(selectedTorrents.begin(), selectedTorrents.end());
-                    right_win.selected = std::min(right_win.selected, (int)right_win.items.size() - 1);
+                    right_win.items.assign(selectedTorrents.begin(),
+                                           selectedTorrents.end());
+                    right_win.selected = std::min(
+                        right_win.selected, (int)right_win.items.size() - 1);
                 }
                 break;
             }
