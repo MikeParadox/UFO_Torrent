@@ -623,6 +623,7 @@ int main()
                 else if (left_win.selected == 1)
                 {
                     downDir = fileDialog(stdscr, ".", true);
+                    refresh();
                     renderWindows(lwin, rwin);
                     refresh();
                 }
