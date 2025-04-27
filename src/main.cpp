@@ -61,7 +61,7 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
     }
 
     box(rwin, 0, 0);
-    mvwprintw(rwin, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
+    mvwprintw(rwin, 1, 2, "Active Torrents (%zu), r:remove", selectedTorrents.size());
     int max_width_r = getmaxx(rwin) - 4;
     int row = 3;
     int i = 0;
