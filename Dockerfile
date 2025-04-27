@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 WORKDIR /app
         
@@ -35,10 +35,10 @@ RUN apt-get install -y libboost-filesystem-dev
 COPY ./CMakeLists.txt ./CMakeLists.txt
 COPY ./CMakeUserPresets.json ./CMakeUserPresets.json
 COPY ./libs ./libs
-COPY ./tests ./tests
 COPY ./includes ./includes
 COPY ./src ./src
 COPY ./torrent ./ufo-torrent
+COPY ./docs/ufo-torrent.1 ./docs/ufo-torrent.1
 
 # ---------------------------------------------------
 
@@ -48,14 +48,15 @@ RUN ninja -C build/release
       
 # create .deb ----------------------------------------
 
-RUN mkdir -p ufo-torrent/usr/local/bin
 RUN cp build/release/main ufo-torrent/usr/local/bin/
 RUN mv ufo-torrent/usr/local/bin/main ufo-torrent/usr/local/bin/ufo-torrent
+RUN mkdir -p ufo-torrent/usr/share/man/man1
+RUN gzip -c -k -n docs/ufo-torrent.1 > ufo-torrent/usr/share/man/man1/ufo-torrent.1.gz
+RUN chmod +x ufo-torrent/DEBIAN/postinst
 RUN dpkg-deb --build ufo-torrent
 
 RUN groupadd -r sample && useradd -r -g sample sample
 USER sample
-
 
 # ----------------------------------------------------
 
