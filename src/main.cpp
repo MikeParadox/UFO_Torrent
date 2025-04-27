@@ -37,7 +37,7 @@ std::set<std::string> selectedTorrents;
 std::string downDir = ".";
 WINDOW* lwin;
 WINDOW* rwin;
-const std::vector<std::string> left_items = {"Add Torrent", "Select DownDir",
+const std::vector<std::string> left_items = {"Add Torrent", "Select Download Dir", "Create Torrent",
                                              "Exit"};
 
 lt::session torrent_session;
@@ -623,15 +623,21 @@ int main()
                 else if (left_win.selected == 1)
                 {
                     downDir = fileDialog(stdscr, ".", true);
-                    refresh();
+                    clear();
                     renderWindows(lwin, rwin);
                     refresh();
                 }
                 else if (left_win.selected == 2)
                 {
-                    goto cleanup;
+                std::string path = fileDialog(stdscr, ".", true);
+                clear();
+                renderWindows(lwin, rwin);
+                refresh();
                 }
-                break;
+                else if (left_win.selected == 3)
+                {
+                goto cleanup;
+                }
             }
         }
         else if (right_win.active)
