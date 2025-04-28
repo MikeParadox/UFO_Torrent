@@ -52,7 +52,7 @@ std::set<std::string> selectedTorrents;
 std::string downDir = ".";
 WINDOW* lwin;
 WINDOW* rwin;
-const std::vector<std::string> left_items = {"Add Torrent", "Select DownDir",
+const std::vector<std::string> left_items = {"Add Torrent", "Select Download Dir", "Create example Torrent",
                                              "Exit"};
 
 lt::session torrent_session;
@@ -335,7 +335,7 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
     }
 }
 
-std::string fileDialog(WINDOW* parent, const std::string& startDir = ".",
+std::string fileDialog(WINDOW* parent, const std::string& message, const std::string& startDir = ".",
                        const bool& only_dirs = false)
 {
     std::string currentDir = (startDir == ".")
@@ -481,13 +481,13 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".",
 
         if (only_dirs)
         {
-            mvwprintw(dialog, 1, 2,
-                      "Select a download dir (E:move, Enter:select, Q:quit)");
+            mvwprintw(dialog, 1, 2, "%s",
+                (message + " (E:move, Enter:select, Q:quit)").c_str());
         }
         else
         {
-            mvwprintw(dialog, 1, 2,
-                      "Select a torrent file (ENTER:select, Q:quit)");
+            mvwprintw(dialog, 1, 2, "%s",
+                (message + " (ENTER:select, Q : quit)").c_str());
         }
 
         for (int i = 0; i < numRows; ++i)
@@ -697,7 +697,7 @@ int main()
                               break;
                 case 10: if (left_win.selected == 0)
                 {
-                    std::string path = fileDialog(stdscr);
+                    std::string path = fileDialog(stdscr,"Select a .torrent file");
                     if (!path.empty())
                     {
                         selectedTorrents.insert(path);
@@ -722,12 +722,45 @@ int main()
                 }
                        else if (left_win.selected == 1)
                 {
-                    downDir = fileDialog(stdscr, ".", true);
+                    downDir = fileDialog(stdscr,"Select a download dir", ".", true);
+                    clear();
                     renderWindows(lwin, rwin);
                     refresh();
                 }
                        else if (left_win.selected == 2)
                 {
+                std::string path = fileDialog(stdscr,"Select a base-folder", ".", true);
+                if (path.empty())
+                {  
+                    renderWindows(lwin, rwin);
+                    continue;
+                }
+
+                clear();
+                refresh();
+                renderWindows(lwin, rwin);
+
+                Torrent::TorrentFile torrent = Torrent::createTorrentFile("exemple", { {"exemple"} }, "Tester", path);
+
+                std::string outPath = fileDialog(stdscr,"Select a output path", ".", true);
+                if (outPath.empty())
+                {  
+                    renderWindows(lwin, rwin);
+                    continue;
+                }
+                if (fs::is_directory(outPath))
+                {
+                    outPath = (fs::path(outPath) / "example.torrent").string();
+                }
+                std::string data = Encoder::encode(toValue(torrent));
+                createFile(outPath, data);
+                clear();
+                refresh();
+                renderWindows(lwin, rwin);
+                }
+                else if (left_win.selected == 3)
+                {
+                goto cleanup;
                     // Changing the flag value.
                     running = false;
                     goto cleanup;
@@ -774,6 +807,8 @@ int main()
 cleanup:
     printf("\033[?7h");
     fflush(stdout);
+
+    torrent_session.abort();
 
     delwin(lwin);
     delwin(rwin);

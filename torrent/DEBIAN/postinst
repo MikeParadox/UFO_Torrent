@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Install the ufo-torrent alternative and man page
+        update-alternatives --install /usr/bin/ufo-torrent ufo-torrent /usr/local/bin/ufo-torrent 50 \
+            --slave /usr/share/man/man1/ufo-torrent.1.gz ufo-torrent.1.gz /usr/share/man/man1/ufo-torrent.1.gz
+        ;;
+    abort-deconfigure|abort-remove)
+        # Cleanup if installation/removal fails
+        update-alternatives --remove ufo-torrent /usr/local/bin/ufo-torrent
+        ;;
+    upgrade)
+        # Reinstall during upgrade to ensure latest version is active
+        update-alternatives --install /usr/bin/ufo-torrent ufo-torrent /usr/local/bin/ufo-torrent 50 \
+            --slave /usr/share/man/man1/ufo-torrent.1.gz ufo-torrent.1.gz /usr/share/man/man1/ufo-torrent.1.gz
+        ;;
+esac
