@@ -42,11 +42,10 @@ struct WindowState
 
 WindowState left_win, right_win;
 
-// Global variable to store downloading torrents statuses
 std::vector <TorrentStatus> active_torrents;
-// (MAY BE DELETED) Added it to protect active_torrents from synchronous access
+
 std::mutex updates_mutex;
-// A flag with a safe ability to change from any stream
+
 std::atomic<bool> running{ true };
 
 std::set<std::string> selectedTorrents;
@@ -57,9 +56,9 @@ const std::vector<std::string> left_items = {"Add Torrent", "Select DownDir",
                                              "Exit"};
 
 lt::session torrent_session;
-const float WINDOW_SIZE_RATIO = 0.7f; // Consistent size for both dialogs
+const float WINDOW_SIZE_RATIO = 0.7f; 
 
-// Procedure to update progress of active_torrents elements
+
 void update_progress(lt::session& torrent_session) {
     while (running) { 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -107,7 +106,6 @@ void update_progress(lt::session& torrent_session) {
     }
 }
 
-// Modified
 void renderWindows(WINDOW* lwin, WINDOW* rwin)
 {
     std::lock_guard<std::mutex> lock(updates_mutex);
@@ -130,14 +128,12 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
     box(rwin, 0, 0);
     mvwprintw(rwin, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
 
-    // Reduced maximum width of torrent name for torrent progress bar,
-    // download rate and status
-    int max_width_r = getmaxx(rwin) - 30; // was: ... = getmaxx(rwin) - 4;
+
+    int max_width_r = getmaxx(rwin) - 30; 
 
     int row = 3;
     int i = 0;
 
-    // Replaced selectedTorrents with active_torrents 
     for (const auto& torrent : active_torrents)
     {
         if (row >= getmaxy(rwin) - 2) break;
@@ -146,10 +142,10 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
             wattron(rwin, A_REVERSE);
         mvwprintw(rwin, row++, 2, "%.*s", max_width_r, name.c_str());
 
-        // Inserted the code block drawing progress bar
+
         int bar_width = 10;
         int pos = (torrent.progress / 100.0f) * bar_width;
-        wattron(rwin, COLOR_PAIR(1));
+        //wattron(rwin, COLOR_PAIR(1));
         wprintw(rwin, " [");
         for (int i = 0; i < bar_width; i++) {
             if (i < pos)
@@ -159,7 +155,7 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
         }
         wprintw(rwin, "] %d kb/s", torrent.download_rate);
         wattroff(rwin, COLOR_PAIR(1));
-        wprintw(rwin, " {%s}", torrent.state.c_str());
+        //wprintw(rwin, " {%s}", torrent.state.c_str());
 
         if (right_win.active && i == right_win.selected)
             wattroff(rwin, A_REVERSE);
@@ -639,15 +635,15 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".",
 
 int main()
 {
-    // Starting a background thread
+    //background thread
     std::thread progress_thread(update_progress, std::ref(torrent_session));
 
     setlocale(LC_ALL, "");
-    setenv("TERMINFO", "/usr/share/terminfo", 1);
+    //setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     // Initializing color pair to paint progress bar
-    start_color();
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    //start_color();
+    //init_pair(1, COLOR_GREEN, COLOR_BLACK);
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
@@ -671,12 +667,12 @@ int main()
     wtimeout(lwin, 100);
     wtimeout(rwin, 100);
 
-    // Modified the while loop for correct progress bar updating
+    
     while (running)
     {
         int ch = wgetch(left_win.active ? lwin : rwin);
 
-        // If the key was pressed, the input proceeding block wil execute
+        
         if (ch != ERR)
         {
             if (ch == KEY_F(1)) break;
@@ -768,17 +764,6 @@ int main()
                     refresh();
                 }
                        break;
-                case 'r': if (!right_win.items.empty())
-                {
-                    auto it = std::next(selectedTorrents.begin(),
-                        right_win.selected);
-                    selectedTorrents.erase(it);
-                    right_win.items.assign(selectedTorrents.begin(),
-                        selectedTorrents.end());
-                    right_win.selected = std::min(
-                        right_win.selected, (int)right_win.items.size() - 1);
-                }
-                        break;
                 }
             }
         }
@@ -794,8 +779,7 @@ cleanup:
     delwin(rwin);
     endwin();
 
-    // Changing the flag value again to do a safe exit, waiting for thread to finish and
-    // aborting the session.
+
     running = false;
     progress_thread.join();
     torrent_session.abort();
