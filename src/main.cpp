@@ -25,6 +25,14 @@ using namespace Torrent;
 using namespace File;
 using namespace Hash;
 
+// Added a structure to track torrents statuses.
+struct TorrentStatus {
+    std::string name;
+    float progress = 0.0f;
+    int download_rate;
+    std::string state;
+};
+
 struct WindowState
 {
     int selected = 0;
@@ -33,6 +41,14 @@ struct WindowState
 };
 
 WindowState left_win, right_win;
+
+// Global variable to store downloading torrents statuses
+std::vector <TorrentStatus> active_torrents;
+// (MAY BE DELETED) Added it to protect active_torrents from synchronous access
+std::mutex updates_mutex;
+// A flag with a safe ability to change from any stream
+std::atomic<bool> running{ true };
+
 std::set<std::string> selectedTorrents;
 std::string downDir = ".";
 WINDOW* lwin;
@@ -43,8 +59,59 @@ const std::vector<std::string> left_items = {"Add Torrent", "Select DownDir",
 lt::session torrent_session;
 const float WINDOW_SIZE_RATIO = 0.7f; // Consistent size for both dialogs
 
+// Procedure to update progress of active_torrents elements
+void update_progress(lt::session& torrent_session) {
+    while (running) { 
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        auto handles = torrent_session.get_torrents();
+        std::vector<lt::torrent_status> statuses;
+        for (const auto& handle : handles) {
+            statuses.push_back(handle.status());
+        }
+
+        std::lock_guard<std::mutex> lock(updates_mutex);
+        active_torrents.clear();
+
+        for (const auto& s : statuses) {
+            TorrentStatus tor;
+            tor.name = s.name;
+            tor.progress = s.progress * 100.0f; 
+            tor.download_rate = s.download_rate / 1024;
+
+            if ((s.flags & lt::torrent_flags::paused) != 0) {
+                tor.state = "Paused";
+            }
+            else {
+                switch (s.state)
+                {
+                case lt::torrent_status::state_t::downloading_metadata:
+                    tor.state = "Metadata";
+                    break;
+                case lt::torrent_status::state_t::downloading:
+                    tor.state = "Downloading";
+                    break;
+                case lt::torrent_status::state_t::seeding:
+                    tor.state = "Seeding";
+                    break;
+                case lt::torrent_status::state_t::finished:
+                    tor.state = "Finished";
+                    break;
+                default:
+                    tor.state = "Unknown";
+                }
+            }
+
+            active_torrents.push_back(tor);
+        }
+    }
+}
+
+// Modified
 void renderWindows(WINDOW* lwin, WINDOW* rwin)
 {
+    std::lock_guard<std::mutex> lock(updates_mutex);
+
     werase(lwin);
     werase(rwin);
 
@@ -62,16 +129,38 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
 
     box(rwin, 0, 0);
     mvwprintw(rwin, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
-    int max_width_r = getmaxx(rwin) - 4;
+
+    // Reduced maximum width of torrent name for torrent progress bar,
+    // download rate and status
+    int max_width_r = getmaxx(rwin) - 30; // was: ... = getmaxx(rwin) - 4;
+
     int row = 3;
     int i = 0;
-    for (const auto& torrent : selectedTorrents)
+
+    // Replaced selectedTorrents with active_torrents 
+    for (const auto& torrent : active_torrents)
     {
         if (row >= getmaxy(rwin) - 2) break;
-        std::string name = fs::path(torrent).filename().string();
+        std::string name = torrent.name;
         if (right_win.active && i == right_win.selected)
             wattron(rwin, A_REVERSE);
         mvwprintw(rwin, row++, 2, "%.*s", max_width_r, name.c_str());
+
+        // Inserted the code block drawing progress bar
+        int bar_width = 10;
+        int pos = (torrent.progress / 100.0f) * bar_width;
+        wattron(rwin, COLOR_PAIR(1));
+        wprintw(rwin, " [");
+        for (int i = 0; i < bar_width; i++) {
+            if (i < pos)
+                waddch(rwin, ACS_BLOCK);
+            else
+                waddch(rwin, ' ');
+        }
+        wprintw(rwin, "] %d kb/s", torrent.download_rate);
+        wattroff(rwin, COLOR_PAIR(1));
+        wprintw(rwin, " {%s}", torrent.state.c_str());
+
         if (right_win.active && i == right_win.selected)
             wattroff(rwin, A_REVERSE);
         i++;
@@ -550,9 +639,15 @@ std::string fileDialog(WINDOW* parent, const std::string& startDir = ".",
 
 int main()
 {
+    // Starting a background thread
+    std::thread progress_thread(update_progress, std::ref(torrent_session));
+
     setlocale(LC_ALL, "");
     setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
+    // Initializing color pair to paint progress bar
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
@@ -572,37 +667,46 @@ int main()
 
     renderWindows(lwin, rwin);
 
-    int ch;
-    while ((ch = wgetch(left_win.active ? lwin : rwin)))
-    {
-        if (ch == KEY_F(1)) break;
+    // Added a 100ms timeout for getch() func 
+    wtimeout(lwin, 100);
+    wtimeout(rwin, 100);
 
-        if (left_win.active)
+    // Modified the while loop for correct progress bar updating
+    while (running)
+    {
+        int ch = wgetch(left_win.active ? lwin : rwin);
+
+        // If the key was pressed, the input proceeding block wil execute
+        if (ch != ERR)
         {
-            switch (ch)
+            if (ch == KEY_F(1)) break;
+
+            if (left_win.active)
             {
-            case KEY_DOWN: left_win.selected =
-                           (left_win.selected + 1) % left_items.size();
-                break;
-            case KEY_UP: left_win.selected =
-                         (left_win.selected - 1 + left_items.size()) %
-                         left_items.size();
-                break;
-            case KEY_RIGHT: if (!selectedTorrents.empty())
+                switch (ch)
+                {
+                case KEY_DOWN: left_win.selected =
+                    (left_win.selected + 1) % left_items.size();
+                    break;
+                case KEY_UP: left_win.selected =
+                    (left_win.selected - 1 + left_items.size()) %
+                    left_items.size();
+                    break;
+                case KEY_RIGHT: if (!selectedTorrents.empty())
                 {
                     left_win.active = false;
                     right_win.active = true;
                     right_win.selected = 0;
                 }
-                break;
-            case 10: if (left_win.selected == 0)
+                              break;
+                case 10: if (left_win.selected == 0)
                 {
                     std::string path = fileDialog(stdscr);
                     if (!path.empty())
                     {
                         selectedTorrents.insert(path);
                         right_win.items.assign(selectedTorrents.begin(),
-                                               selectedTorrents.end());
+                            selectedTorrents.end());
                         try
                         {
                             lt::add_torrent_params atp;
@@ -613,43 +717,49 @@ int main()
                         catch (const std::exception& e)
                         {
                             mvprintw(LINES - 2, 0, "Failed to add torrent: %s",
-                                     e.what());
+                                e.what());
                             clrtoeol();
                             refresh();
                         }
                     }
                     renderWindows(lwin, rwin);
                 }
-                else if (left_win.selected == 1)
+                       else if (left_win.selected == 1)
                 {
                     downDir = fileDialog(stdscr, ".", true);
                     renderWindows(lwin, rwin);
                     refresh();
                 }
-                else if (left_win.selected == 2)
+                       else if (left_win.selected == 2)
                 {
+                    // Changing the flag value.
+                    running = false;
                     goto cleanup;
                 }
-                break;
+                       break;
+                }
             }
-        }
-        else if (right_win.active)
-        {
-            switch (ch)
+            else if (right_win.active)
             {
-            case KEY_LEFT: left_win.active = true;
-                right_win.active = false;
-                break;
-            case KEY_DOWN: if (!right_win.items.empty())
+                switch (ch)
+                {
+                case KEY_LEFT: left_win.active = true;
+                    right_win.active = false;
+                    break;
+                case KEY_DOWN: if (!right_win.items.empty())
+                {
                     right_win.selected =
                         (right_win.selected + 1) % right_win.items.size();
-                break;
-            case KEY_UP: if (!right_win.items.empty())
+                }
+                    break;
+                case KEY_UP: if (!right_win.items.empty())
+                {
                     right_win.selected =
                         (right_win.selected - 1 + right_win.items.size()) %
                         right_win.items.size();
-                break;
-            case 10: if (!right_win.items.empty())
+                }
+                    break;
+                case 10: if (!right_win.items.empty())
                 {
                     std::string selected = *std::next(
                         selectedTorrents.begin(), right_win.selected);
@@ -657,18 +767,19 @@ int main()
                     clrtoeol();
                     refresh();
                 }
-                break;
-            case 'r': if (!right_win.items.empty())
+                       break;
+                case 'r': if (!right_win.items.empty())
                 {
                     auto it = std::next(selectedTorrents.begin(),
-                                        right_win.selected);
+                        right_win.selected);
                     selectedTorrents.erase(it);
                     right_win.items.assign(selectedTorrents.begin(),
-                                           selectedTorrents.end());
+                        selectedTorrents.end());
                     right_win.selected = std::min(
                         right_win.selected, (int)right_win.items.size() - 1);
                 }
-                break;
+                        break;
+                }
             }
         }
 
@@ -682,5 +793,11 @@ cleanup:
     delwin(lwin);
     delwin(rwin);
     endwin();
+
+    // Changing the flag value again to do a safe exit, waiting for thread to finish and
+    // aborting the session.
+    running = false;
+    progress_thread.join();
+    torrent_session.abort();
     return 0;
 }
