@@ -335,6 +335,12 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
     }
 }
 
+void to_low(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+}
+
 std::string fileDialog(WINDOW* parent, const std::string& message, const std::string& startDir = ".",
                        const bool& only_dirs = false)
 {
@@ -451,7 +457,9 @@ std::string fileDialog(WINDOW* parent, const std::string& message, const std::st
         }
 
         selected = std::clamp(selected, 0, (int)files.size() - 1);
-
+        
+        //auto f = [](std::string a, std::string b) { return to_low(a) < to_low(b); }
+        std::sort(files.begin(), files.end(), [](std::string a, std::string b) { to_low(a); to_low(b); return a < b; });
         int new_height = calculate_path_height(currentDir, errorMsg);
         if (new_height != path_win_height)
         {
