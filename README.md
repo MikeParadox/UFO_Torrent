@@ -42,3 +42,29 @@ Create BitTorrent from scratch - https://www.seanjoflynn.com/research/bittorrent
 libtorrent - https://www.libtorrent.org/
 
 Simple BitTorrent in C++ - https://github.com/ss16118/torrent-client-cpp
+
+## Инструкция по запуску (Conan2)
+
+1)     conan install . -s build_type=Release --build=missing
+2)     cmake --preset conan-release
+3)     cmake --build --preset conan-release
+4)     ./build/Release/main
+
+## Инструкция по запуску (Docker)
+
+1)     docker build -t ufo-torrent .  
+2)     docker run --name torrent -it [-u root] ufo-torrent:latest [/bin/bash]
+(при открытом контейнере, в другом терминале для извлечения deb пакета)
+
+    docker cp torrent:/app/ufo-torrent.deb .
+
+## Инструкция по установке .deb пакета
+
+1.установить используя ваш packet manager
+ubuntu 24.04 example:
+
+    [sudo] apt install ./ufo-torrent.deb (находясь с ним в одной директории)
+2)     ufo-torrent #(в терминале)
+
+(можно установить или запустить программу внутри докер контейнера)
+
