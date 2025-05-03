@@ -49,6 +49,9 @@ Simple BitTorrent in C++ - https://github.com/ss16118/torrent-client-cpp
 2)     cmake --preset conan-release
 3)     cmake --build --preset conan-release
 4)     ./build/Release/main
+4.1) может потребоваться следующее: 
+
+    export TERMINFO=/usr/share/terminfo
 
 ## Инструкция по запуску (Docker)
 
