@@ -48,7 +48,7 @@ RUN ninja -C build/release
       
 # create .deb ----------------------------------------
 
-RUN mkdir -p ufo-torrent/usr/local/bin
+RUN mkdir -p ufo-torrent/usr/local/bin/
 RUN cp build/release/main ufo-torrent/usr/local/bin/
 RUN mv ufo-torrent/usr/local/bin/main ufo-torrent/usr/local/bin/ufo-torrent
 RUN mkdir -p ufo-torrent/usr/share/man/man1

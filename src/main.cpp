@@ -85,9 +85,8 @@ void update_progress(lt::session& torrent_session)
             tor.progress = s.progress * 100.0f;
             tor.download_rate = s.download_rate / 1024;
 
-            if ((s.flags & lt::torrent_flags::paused) != 0)
-            {
-                tor.state = "Paused";
+            if ((s.flags & lt::torrent_flags::paused) != 0) {
+                tor.state = "Finished";
             }
             else
             {
@@ -162,8 +161,20 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
             else
                 waddch(rwin, ' ');
         }
-        wprintw(rwin, "] %d kb/s", torrent.download_rate);
-        wattroff(rwin, COLOR_PAIR(1));
+        if (torrent.progress >= 1.0f)
+        {
+            wprintw(rwin, "] Finished");
+        }
+        else if (torrent.download_rate > 1024)
+        {
+            wprintw(rwin, "] %d mb/s", torrent.download_rate/1024);
+        }
+        else
+        {
+            wprintw(rwin, "] %d kb/s", torrent.download_rate);
+        }
+        
+        //wattroff(rwin, COLOR_PAIR(1));
         //wprintw(rwin, " {%s}", torrent.state.c_str());
 
         if (right_win.active && i == right_win.selected)
@@ -351,8 +362,13 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
     }
 }
 
-std::string fileDialog(WINDOW* parent, const std::string& message,
-                       const std::string& startDir = ".",
+void to_low(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+}
+
+std::string fileDialog(WINDOW* parent, const std::string& message, const std::string& startDir = ".",
                        const bool& only_dirs = false)
 {
     std::string currentDir = (startDir == ".")
@@ -468,7 +484,9 @@ std::string fileDialog(WINDOW* parent, const std::string& message,
         }
 
         selected = std::clamp(selected, 0, (int)files.size() - 1);
-
+        
+        //auto f = [](std::string a, std::string b) { return to_low(a) < to_low(b); }
+        std::sort(files.begin(), files.end(), [](std::string a, std::string b) { to_low(a); to_low(b); return a < b; });
         int new_height = calculate_path_height(currentDir, errorMsg);
         if (new_height != path_win_height)
         {
@@ -531,18 +549,40 @@ std::string fileDialog(WINDOW* parent, const std::string& message,
         case KEY_DOWN: if (selected < (int)files.size() - 1) ++selected;
             break;
         case 'e':
-        case 'E': if (only_dirs)
+        case 'E': 
+            if (only_dirs)
             {
-                auto path = fs::path(currentDir) / files[selected];
-                try
+                if (files[selected] == "..")
                 {
-                    fs::directory_iterator test_it(path);
-                    currentDir = path.string();
-                    selected = 0;
+                    auto parent = fs::path(currentDir).parent_path();
+                    if (!parent.empty())
+                    {
+                        try
+                        {
+                            if (fs::exists(parent) && fs::is_directory(parent))
+                            {
+                                currentDir = parent.string();
+                                selected = 0;
+                            }
+                        }
+                        catch (const fs::filesystem_error& e)
+                        {
+                            errorMsg = "Error: " + std::string(e.what());
+                        }
+                    }
                 }
-                catch (const fs::filesystem_error& e)
-                {
-                    errorMsg = "Error: " + std::string(e.what());
+                else {
+                    auto path = fs::path(currentDir) / files[selected];
+                    try
+                    {
+                        fs::directory_iterator test_it(path);
+                        currentDir = path.string();
+                        selected = 0;
+                    }
+                    catch (const fs::filesystem_error& e)
+                    {
+                        errorMsg = "Error: " + std::string(e.what());
+                    }
                 }
             }
             break;
@@ -718,25 +758,17 @@ int main()
                             stdscr, "Select a .torrent file");
                         if (!path.empty())
                         {
-                            selectedTorrents.insert(path);
-                            right_win.items.assign(selectedTorrents.begin(),
-                                                   selectedTorrents.end());
-                            try
-                            {
-                                lt::add_torrent_params atp;
-                                atp.ti = std::make_shared<lt::torrent_info>(
-                                    path);
-                                atp.save_path = downDir;
-                                torrent_session.add_torrent(atp);
-                            }
-                            catch (const std::exception& e)
-                            {
-                                mvprintw(LINES - 2, 0,
-                                         "Failed to add torrent: %s",
-                                         e.what());
-                                clrtoeol();
-                                refresh();
-                            }
+
+                            lt::add_torrent_params atp;
+                            atp.ti = std::make_shared<lt::torrent_info>(path);
+                            atp.save_path = downDir;
+
+                          
+                            atp.flags &= ~lt::torrent_flags::seed_mode; 
+                            atp.flags |= lt::torrent_flags::upload_mode; 
+                            atp.flags |= lt::torrent_flags::stop_when_ready;
+
+                            torrent_session.add_torrent(atp);
                         }
                         renderWindows(lwin, rwin);
                     }
