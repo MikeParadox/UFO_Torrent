@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.19)
+﻿cmake_minimum_required(VERSION 3.13)
 
 project("ufo_torrent"
         VERSION 0.1

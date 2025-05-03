@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:12
 
 WORKDIR /app
         
@@ -60,5 +60,3 @@ RUN groupadd -r sample && useradd -r -g sample sample
 USER sample
 
 # ----------------------------------------------------
-
-#ENTRYPOINT ["./build/release/main"]
