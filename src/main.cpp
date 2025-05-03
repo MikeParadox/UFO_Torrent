@@ -239,10 +239,11 @@ bool showTorrentPreview(WINDOW* parent, const std::string& path)
                             fileInfo.path.back(), fileInfo.length);
                     }
                 }
-                std::function<void(const std::string &, int, int&)>
-                display_tree
-                    =
-                    [&](const std::string& path, int depth, int& current_row)
+                std::function<void(const std::string&, int, int&)>
+                    display_tree
+                        =
+                        [&](const std::string& path, int depth,
+                            int& current_row)
                     {
                         if (current_row >= max_content_rows + scroll_offset)
                             return;
@@ -655,7 +656,7 @@ int main()
     std::thread progress_thread(update_progress, std::ref(torrent_session));
 
     setlocale(LC_ALL, "");
-    setenv("TERMINFO", "/usr/share/terminfo", 1);
+    // setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     // Initializing color pair to paint progress bar
     //start_color();
