@@ -79,7 +79,7 @@ void update_progress(lt::session& torrent_session) {
             tor.download_rate = s.download_rate / 1024;
 
             if ((s.flags & lt::torrent_flags::paused) != 0) {
-                tor.state = "Paused";
+                tor.state = "Finished";
             }
             else {
                 switch (s.state)
@@ -153,8 +153,20 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
             else
                 waddch(rwin, ' ');
         }
-        wprintw(rwin, "] %d kb/s", torrent.download_rate);
-        wattroff(rwin, COLOR_PAIR(1));
+        if (torrent.progress >= 1.0f)
+        {
+            wprintw(rwin, "] Finished");
+        }
+        else if (torrent.download_rate > 1024)
+        {
+            wprintw(rwin, "] %d mb/s", torrent.download_rate/1024);
+        }
+        else
+        {
+            wprintw(rwin, "] %d kb/s", torrent.download_rate);
+        }
+        
+        //wattroff(rwin, COLOR_PAIR(1));
         //wprintw(rwin, " {%s}", torrent.state.c_str());
 
         if (right_win.active && i == right_win.selected)
@@ -738,6 +750,12 @@ int main()
                             lt::add_torrent_params atp;
                             atp.ti = std::make_shared<lt::torrent_info>(path);
                             atp.save_path = downDir;
+
+                          
+                            atp.flags &= ~lt::torrent_flags::seed_mode; 
+                            atp.flags |= lt::torrent_flags::upload_mode; 
+                            atp.flags |= lt::torrent_flags::stop_when_ready;
+
                             torrent_session.add_torrent(atp);
                         }
                         catch (const std::exception& e)
