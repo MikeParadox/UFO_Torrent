@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:12
 
 WORKDIR /app
         
@@ -48,6 +48,7 @@ RUN ninja -C build/release
       
 # create .deb ----------------------------------------
 
+RUN mkdir -p usr/local/bin
 RUN cp build/release/main ufo-torrent/usr/local/bin/
 RUN mv ufo-torrent/usr/local/bin/main ufo-torrent/usr/local/bin/ufo-torrent
 RUN mkdir -p ufo-torrent/usr/share/man/man1
@@ -59,5 +60,3 @@ RUN groupadd -r sample && useradd -r -g sample sample
 USER sample
 
 # ----------------------------------------------------
-
-#ENTRYPOINT ["./build/release/main"]

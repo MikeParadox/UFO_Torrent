@@ -10,8 +10,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
-
-add_library(Source STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
+add_library(Source ../includes/ufo_torrent.h ufo_torrent.cpp
         ./bencode/decode.cpp
         ./bencode/prettyPrinter.cpp
         ./bencode/encode.cpp
@@ -41,13 +40,6 @@ add_library(Source STATIC ../includes/ufo_torrent.h ufo_torrent.cpp
 )
 
 add_executable(main main.cpp)
-
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-
-# If you want completely static (including libc), use:
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-
-#find_package(Boost 1.45.0 COMPONENTS system filesystem)
 
 target_link_libraries(main PRIVATE
         Source
