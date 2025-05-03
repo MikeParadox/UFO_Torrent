@@ -79,7 +79,7 @@ void update_progress(lt::session& torrent_session) {
             tor.download_rate = s.download_rate / 1024;
 
             if ((s.flags & lt::torrent_flags::paused) != 0) {
-                tor.state = "Paused";
+                tor.state = "Finished";
             }
             else {
                 switch (s.state)
@@ -153,8 +153,20 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
             else
                 waddch(rwin, ' ');
         }
-        wprintw(rwin, "] %d kb/s", torrent.download_rate);
-        wattroff(rwin, COLOR_PAIR(1));
+        if (torrent.progress >= 1.0f)
+        {
+            wprintw(rwin, "] Finished");
+        }
+        else if (torrent.download_rate > 1024)
+        {
+            wprintw(rwin, "] %d mb/s", torrent.download_rate/1024);
+        }
+        else
+        {
+            wprintw(rwin, "] %d kb/s", torrent.download_rate);
+        }
+        
+        //wattroff(rwin, COLOR_PAIR(1));
         //wprintw(rwin, " {%s}", torrent.state.c_str());
 
         if (right_win.active && i == right_win.selected)
@@ -522,18 +534,40 @@ std::string fileDialog(WINDOW* parent, const std::string& message, const std::st
         case KEY_DOWN: if (selected < (int)files.size() - 1) ++selected;
             break;
         case 'e':
-        case 'E': if (only_dirs)
+        case 'E': 
+            if (only_dirs)
             {
-                auto path = fs::path(currentDir) / files[selected];
-                try
+                if (files[selected] == "..")
                 {
-                    fs::directory_iterator test_it(path);
-                    currentDir = path.string();
-                    selected = 0;
+                    auto parent = fs::path(currentDir).parent_path();
+                    if (!parent.empty())
+                    {
+                        try
+                        {
+                            if (fs::exists(parent) && fs::is_directory(parent))
+                            {
+                                currentDir = parent.string();
+                                selected = 0;
+                            }
+                        }
+                        catch (const fs::filesystem_error& e)
+                        {
+                            errorMsg = "Error: " + std::string(e.what());
+                        }
+                    }
                 }
-                catch (const fs::filesystem_error& e)
-                {
-                    errorMsg = "Error: " + std::string(e.what());
+                else {
+                    auto path = fs::path(currentDir) / files[selected];
+                    try
+                    {
+                        fs::directory_iterator test_it(path);
+                        currentDir = path.string();
+                        selected = 0;
+                    }
+                    catch (const fs::filesystem_error& e)
+                    {
+                        errorMsg = "Error: " + std::string(e.what());
+                    }
                 }
             }
             break;
@@ -647,7 +681,7 @@ int main()
     std::thread progress_thread(update_progress, std::ref(torrent_session));
 
     setlocale(LC_ALL, "");
-    //setenv("TERMINFO", "/usr/share/terminfo", 1);
+    setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     // Initializing color pair to paint progress bar
     //start_color();
@@ -716,6 +750,12 @@ int main()
                             lt::add_torrent_params atp;
                             atp.ti = std::make_shared<lt::torrent_info>(path);
                             atp.save_path = downDir;
+
+                          
+                            atp.flags &= ~lt::torrent_flags::seed_mode; 
+                            atp.flags |= lt::torrent_flags::upload_mode; 
+                            atp.flags |= lt::torrent_flags::stop_when_ready;
+
                             torrent_session.add_torrent(atp);
                         }
                         catch (const std::exception& e)
