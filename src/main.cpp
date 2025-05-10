@@ -133,7 +133,7 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
     }
 
     box(rwin, 0, 0);
-    mvwprintw(rwin, 1, 2, "Active Torrents (%zu)", selectedTorrents.size());
+    mvwprintw(rwin, 1, 2, "Active Torrents");
 
 
     int max_width_r = getmaxx(rwin) - 30;
@@ -161,7 +161,7 @@ void renderWindows(WINDOW* lwin, WINDOW* rwin)
             else
                 waddch(rwin, ' ');
         }
-        if (torrent.progress >= 1.0f)
+        if (torrent.progress >= 100.0f)
         {
             wprintw(rwin, "] Finished");
         }
@@ -696,7 +696,7 @@ int main()
     std::thread progress_thread(update_progress, std::ref(torrent_session));
 
     setlocale(LC_ALL, "");
-    // setenv("TERMINFO", "/usr/share/terminfo", 1);
+    setenv("TERMINFO", "/usr/share/terminfo", 1);
     initscr();
     // Initializing color pair to paint progress bar
     //start_color();
@@ -763,10 +763,8 @@ int main()
                             atp.ti = std::make_shared<lt::torrent_info>(path);
                             atp.save_path = downDir;
 
-                          
-                            atp.flags &= ~lt::torrent_flags::seed_mode; 
-                            atp.flags |= lt::torrent_flags::upload_mode; 
-                            atp.flags |= lt::torrent_flags::stop_when_ready;
+                            atp.flags &= ~lt::torrent_flags::paused;
+                            atp.flags &= ~lt::torrent_flags::auto_managed;
 
                             torrent_session.add_torrent(atp);
                         }

@@ -41,6 +41,8 @@ add_library(Source ../includes/ufo_torrent.h ufo_torrent.cpp
 
 add_executable(main main.cpp)
 
+#target_link_options(main PRIVATE -static-libgcc -static-libstdc++)
+
 target_link_libraries(main PRIVATE
         Source
         ${CURSES_LIBRARIES}

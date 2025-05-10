@@ -3,7 +3,10 @@ Version: 1.0-1
 Section: base
 Priority: optional
 Architecture: all
-Depends: libtorrent-rasterbar-dev,libgtest-dev,libcurl4-openssl-dev,libncurses5-dev,libncurses-dev,libncurses6,libboost-dev,libboost-locale-dev,libboost-filesystem-dev
+Depends: libtorrent-rasterbar2.0,
+ libcurl4-openssl-dev,
+ libncurses6,
+ libboost-locale1.74.0
 Maintainer: UFO-Torrent command <you@email.com>
 Homepage: https://github.com/MikeParadox/UFO_Torrent
 Description: Simple and reliable torrent-clion build on BitTorrent protocol by SFE students
